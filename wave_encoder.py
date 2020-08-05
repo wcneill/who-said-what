@@ -151,7 +151,4 @@ if __name__ == '__main__':
         signal += a * np.sin(2 * np.pi * f * t_vec)
 
     encoder = WaveEncoder()
-    # encoder.plot_components()
-    # encoder.plot_transform()
-    encoder.plot_signal()
     encoder.fit(signal, Fs, T, t, threshold=None)
