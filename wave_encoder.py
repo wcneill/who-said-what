@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.signal import find_peaks
-
 import matplotlib.pyplot as plt
 
 
@@ -152,3 +151,5 @@ if __name__ == '__main__':
 
     encoder = WaveEncoder()
     encoder.fit(signal, Fs, T, t, threshold=None)
+
+    # This is a comment to test pull requests and circleCI github checks.
