@@ -1,5 +1,5 @@
 # Python CircleCI 2.0 configuration file
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
@@ -17,7 +17,7 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
-  unittest:
+  test:
     docker:
       - image: circleci/python:3.8
       # Step 3: run linter and tests
@@ -28,10 +28,11 @@ jobs:
           command: |
             . venv/bin/activate
             pytest -v --cov
+
 workflows:
   build_and_test:
     jobs:
       - build
-      - unittest:
+      - test:
           requires:
             -build
