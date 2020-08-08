@@ -28,7 +28,6 @@ jobs:
           command: |
             . venv/bin/activate
             pytest -v --cov
-
 workflows:
   build_and_test:
     jobs:
