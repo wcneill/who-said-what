@@ -15,7 +15,7 @@ jobs:
           name: install dependencies
           command: |
             python3 -m venv venv
-            echo ls venv/
+            ls venv/
             . venv/bin/activate
             pip install -r requirements.txt
   test:
