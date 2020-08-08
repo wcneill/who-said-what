@@ -1,5 +1,5 @@
 import unittest
-from wave_encoder import *
+from wsw.wave_encoder import *
 
 class TestEncoder(unittest.TestCase):
     def test_plot_no_fit1(self):
