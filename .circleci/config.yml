@@ -2,12 +2,12 @@
 version: 2
 jobs:
   build:
-    - docker:
+    docker:
       image: circleci/python:3.8
 
-    - working_directory: ~/repo
+    working_directory: ~/repo
 
-    - steps:
+    steps:
       # Step 1: obtain repo from GitHub
       - checkout
       # Step 2: create virtual env and install dependencies
@@ -19,7 +19,7 @@ jobs:
             pip install -r requirements.txt
   test:
     docker:
-      - image: circleci/python:3.8
+      image: circleci/python:3.8
       # Step 3: run linter and tests
     steps :
       - checkout
