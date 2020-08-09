@@ -6,16 +6,16 @@ class Fingerprint:
         self.clip = clip
         self.fingerprint = self.get_prints(self.clip, window)
 
-    # Apply Low Pass Filter
+    # Apply Low Pass Filter (> 5kHz)
     def lpfilter(self, clip):
         pass
 
-    # Downsample
+    # resample 44khz to 11khz
     def downsample(self, clip):
         pass
 
-    # Compute FT
-    def fft(self, window, signal):
+    # Compute short-time fourie transform
+    def stft(self, window, signal):
         pass
 
     # Compute FFTs over sliding window
@@ -85,6 +85,9 @@ class Fingerprint:
         # Create Address [anchor_freq, point_freq, delta_t]
         # Create Value [anchor_time]
 
-
+# NOTES:
+# Librosa has a stft function to create spectrograms.
+# Libros also has a 'split' function which splits audio into non-silent
+# portions of audio. This would be helpful for the birdcall recordings
 
 
