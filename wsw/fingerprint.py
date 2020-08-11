@@ -2,9 +2,6 @@ import scipy.signal as sig
 import librosa
 import numpy as np
 
-def denoise(clip):
-    pass
-
 
 def lpfilter(signal, sr):
     cutoff = 10e3
@@ -50,33 +47,21 @@ def spec_filter(spec, n_bins):
         filtered[i] = ft_filter(dft, n_bins)
     return filtered.T
 
-class Fingerprint():
-    def __init__(self, path, sr=22050, n_ftt=512):
+
+class Fingerprint:
+    def __init__(self, path, sr=22050, n_fft=512):
         y, sr = librosa.load(path, sr)
         self.signal = y
         self.sr = sr
         self.n_ftt = 512
-        # self.fingerprint = self.get_prints(self.clip, window)
-
-    # divide each FT into logarithmic bands and extract
-    # Strongest frequencies. Return filtered transforms
-
-
-    # create spectrogram from set of fourier transforms
-    def create_spectrogram(self, fts):
-        pass
+        self.fingerprint = self.get_prints(self.clip, n_fft)
 
     # putting it all together
-    def get_prints(self, clip, window):
-        clip = denoise(clip)
-        clip = lpfilter(clip)
-        clip = downsample(clip)
-        fts = self.slide(clip, window)
-        fts = self.extract(fts, n_bands=6)
-        return self.create_spectrogram(fts)
+    def get_prints(self, clip, n_fft):
+        pass
+
 
 # ------------Pseudo-code---------------:
-
 # get soundclip
 # apply low pass filter
 # downsample
