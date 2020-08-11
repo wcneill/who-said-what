@@ -36,7 +36,8 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            python3 -m pytest -v --cov
+            pip install -r requirements.txt
+            pytest -v --cov
 
 workflows:
   version: 2
