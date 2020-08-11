@@ -1,19 +1,22 @@
-import wsw.fingerprint
+from wsw.fingerprint import *
+import librosa
+import numpy as np
+import pytest
+
+@pytest.fixture
+def fp():
+    filename = librosa.example('nutcracker')
+    y, sr = librosa.load(filename)
+    return Fingerprint(y, sr)
 
 
-def test_constructor():
-    pass
+def test_lpfilter(fp):
+    filtered = fp.lpfilter(fp.clip, fp.sr)
+    assert isinstance(filtered, np.ndarray)
+    assert filtered.shape == fp.clip.shape
 
 
-def test_lpfilter():
-    pass
-
-
-def test_lpfilter():
-    pass
-
-
-def test_downsample():
+def test_downsample(fp):
     pass
 
 

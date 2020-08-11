@@ -1,31 +1,40 @@
+import scipy.signal as sig
+import librosa
+import numpy as np
+
+def denoise(clip):
+    pass
 
 
-# Psueodocode the algorithm
-class Fingerprint:
-    def __init__(self, clip, window):
+def lpfilter(clip, sr):
+    pass
+
+
+def downsample(clip, sr):
+    pass
+
+
+def stft(signal, window):
+    pass
+
+
+def ffilter(spec, bands=6):
+    pass
+
+
+def spec_filter():
+    pass
+
+class Fingerprint():
+    def __init__(self, clip, sr, window):
         self.clip = clip
+        self.sr = sr
+        self.window = window
         self.fingerprint = self.get_prints(self.clip, window)
-
-    # Apply Low Pass Filter (> 5kHz)
-    def lpfilter(self, clip):
-        pass
-
-    # resample 44khz to 11khz
-    def downsample(self, clip):
-        pass
-
-    # Compute short-time fourie transform
-    def stft(self, window, signal):
-        pass
-
-    # Compute FFTs over sliding window
-    def slide(self, clip, window):
-        pass
 
     # divide each FT into logarithmic bands and extract
     # Strongest frequencies. Return filtered transforms
-    def extract(self, fts, n_bands):
-        pass
+
 
     # create spectrogram from set of fourier transforms
     def create_spectrogram(self, fts):
@@ -33,8 +42,9 @@ class Fingerprint:
 
     # putting it all together
     def get_prints(self, clip, window):
-        clip = self.lpfilter(clip)
-        clip = self.downsample(clip)
+        clip = denoise(clip)
+        clip = lpfilter(clip)
+        clip = downsample(clip)
         fts = self.slide(clip, window)
         fts = self.extract(fts, n_bands=6)
         return self.create_spectrogram(fts)
