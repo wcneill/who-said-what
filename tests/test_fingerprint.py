@@ -26,6 +26,9 @@ def test_ft_filter(fp):
     filtered_dft = ft_filter(spec.T[0], 6)
     assert (filtered_dft != 0).any()
     assert (filtered_dft == 0).any()
+    if (filtered_dft == 0).all():
+        assert (spec.T[0] == 0).all()
+
 
 
 def spec_filter(fp):
@@ -33,3 +36,4 @@ def spec_filter(fp):
     filtered = spec_filter(spec, 6)
     assert (filtered != 0).any()
     assert (filtered == 0).any()
+
