@@ -3,6 +3,7 @@ import librosa
 import numpy as np
 import pytest
 
+
 @pytest.fixture
 def fp():
     filename = librosa.example('nutcracker')
@@ -18,6 +19,7 @@ def test_log_bin():
     a = np.arange(512)
     n_bins = 6
     assert len(log_bin(a, n_bins)) == n_bins
+
 
 def test_ft_filter(fp):
     spec = librosa.stft(fp.signal)

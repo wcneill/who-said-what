@@ -1,6 +1,7 @@
 import scipy.signal as sig
 import librosa
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def lpfilter(signal, sr):
@@ -54,24 +55,32 @@ class Fingerprint:
         self.signal = y
         self.sr = sr
         self.n_ftt = 512
-        self.fingerprint = self.get_prints(self.clip, n_fft)
+        self.fingerprint = self.get_prints(self.signal, sr, n_fft)
 
-    # putting it all together
-    def get_prints(self, clip, n_fft):
-        pass
+    def get_prints(self, signal, sr,  n_fft):
+        signal = lpfilter(signal, sr)
+        signal = downsample(signal, sr, new_sr=11025)
+        spec = stft(signal, n_fft)
+        spec = denoise(spec)
+        spec = spec_filter(spec, 6)
+        return spec
+
+    def show(self):
+        plt.spy(self.fingerprint, origin='lower', aspect='auto')
+        plt.show()
+
+
+if __name__ == '__main__':
+    path = '../recordings/w_headphones.m4a'
+    fp = Fingerprint(path)
+    fp.show()
 
 
 # ------------Pseudo-code---------------:
 # get soundclip
 # apply low pass filter
 # downsample
-# create sliding window:
-    # fts = []
-    # for each window:
-
-        # calculate FT
-        # add FT to list
-    # Return list of FTs.
+# get STFT
 
 # For Each FFT:
     # Divide into logarithmic bands
