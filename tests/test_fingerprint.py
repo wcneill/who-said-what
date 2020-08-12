@@ -3,38 +3,33 @@ import librosa
 import numpy as np
 import pytest
 
+
 @pytest.fixture
 def fp():
     filename = librosa.example('nutcracker')
-    y, sr = librosa.load(filename)
-    return Fingerprint(y, sr)
+    return Fingerprint(filename)
 
 
-def test_lpfilter(fp):
-    filtered = fp.lpfilter(fp.clip, fp.sr)
-    assert isinstance(filtered, np.ndarray)
-    assert filtered.shape == fp.clip.shape
+def test_constructor(fp):
+    assert fp.signal is not None
+    assert fp.sr is not None
 
 
-def test_downsample(fp):
-    pass
+def test_log_bin():
+    a = np.arange(512)
+    n_bins = 6
+    assert len(log_bin(a, n_bins)) == n_bins
 
 
-def test_fft():
-    pass
+def test_ft_filter(fp):
+    spec = librosa.stft(fp.signal)
+    filtered_dft = ft_filter(spec.T[0], 6)
+    assert (filtered_dft != 0).any()
+    assert (filtered_dft == 0).any()
 
 
-def test_slide():
-    pass
-
-
-def test_extract():
-    pass
-
-
-def test_create_spectrogram():
-    pass
-
-
-def test_get_prints():
-    pass
+def spec_filter(fp):
+    spec = librosa.stft(fp.signal)
+    filtered = spec_filter(spec, 6)
+    assert (filtered != 0).any()
+    assert (filtered == 0).any()
