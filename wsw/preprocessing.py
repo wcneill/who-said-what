@@ -16,21 +16,44 @@ import matplotlib.pyplot as plt
 
 # Load an audio file in librosa from file path
 def read_audio(file_path, sr=22050):
+    """
+    Read audio file at desired sampling rate while suppressing warnings involving Librosa's
+    hand off to a different library for file reading.
+    :param file_path: file location
+    :param sr: Default 22050. Desired sampling rate.
+    :return:
+    """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UserWarning)
         return librosa.load(file_path, sr=sr)
 
 
 # write audio to file. Input is tuple (write_path, audio)
-def write_audio(path, audio, sr):
+def write_audio(path, audio, sr, format='WAV'):
+    """
+    Create a new file path (if it doesn't exist already) and write audio to it in desired format.
+    :param path: Path to write to. Will be created if it doesn't exist. Will be overwritten if it does.
+    :param audio: The audio to save.
+    :param sr: The sampling rate of the audio
+    :param format: the output format of the saved file. Default `WAV`. Use
+        `soundfile.available_formats()`
+    :return:
+    """
+
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with sf.SoundFile(path, 'w', sr, channels=1, format='WAV') as f:
+    with sf.SoundFile(path, 'w', sr, channels=1, format=format) as f:
         f.write(audio)
 
 
 # rename extension
-def rename(file_path):
-    return os.path.splitext(file_path)[0] + '.wav'
+def rename(file_path, ext='.wav'):
+    """
+    Rename a file with a new extension (default .wav).
+    :param file_path:
+    :param ext:
+    :return:
+    """
+    return os.path.splitext(file_path)[0] + ext
 
 
 def resample_all(old_path, new_path, sr):
@@ -48,10 +71,10 @@ def resample_all(old_path, new_path, sr):
     Both `curr_path` and `new_path` are relative to the project root.
 
     :param old_path: path, relative to project root. This directory should contain
-    a set of sub-directories corresponding to labelled audio data.
+        a set of sub-directories corresponding to labelled audio data.
     :param new_path: path, relative to project root. This directory will be created
-    for the user, and will receive the re-sampled data in labelled sub-directories.
-    This allows the user to easily delete the original audio data if they wish.
+        for the user, and will receive the re-sampled data in labelled sub-directories.
+        This allows the user to easily delete the original audio data if they wish.
     :param sr: The desired rate to re-sample at
     :return: None
     """
@@ -72,7 +95,7 @@ def resample_all(old_path, new_path, sr):
 
         with Pool(os.cpu_count()) as p:
             print('Loading and Resampling Files...')
-            data = p.starmap(read_audio, zip(r_paths, [sr]*len(r_paths)))
+            data = p.starmap(read_audio, zip(r_paths, [sr] * len(r_paths)))
             print('Saving new files...')
             aud, srs = zip(*data)
             p.starmap(write_audio, zip(w_paths, aud, srs))
