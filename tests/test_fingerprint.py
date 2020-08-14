@@ -30,10 +30,8 @@ def test_ft_filter(fp):
         assert (spec.T[0] == 0).all()
 
 
-
 def spec_filter(fp):
     spec = librosa.stft(fp.signal)
     filtered = spec_filter(spec, 6)
     assert (filtered != 0).any()
     assert (filtered == 0).any()
-
