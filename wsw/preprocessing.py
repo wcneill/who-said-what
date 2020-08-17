@@ -11,52 +11,51 @@ import soundfile as sf
 
 # Multi-processing tools
 from multiprocessing import Pool
-import matplotlib.pyplot as plt
 
 
-# Load an audio file in librosa from file path
-def read_audio(file_path, sr=22050):
+def resample(old_path, new_path, sr, ext='WAV'):
     """
-    Read audio file at desired sampling rate while suppressing warnings involving Librosa's
-    hand off to a different library for file reading.
-    :param file_path: file location
-    :param sr: Default 22050. Desired sampling rate.
-    :return:
-    """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
-        return librosa.load(file_path, sr=sr)
+    Re-samples an audio file and writes it to a new location as a .wav file. This method also keeps a
+    log of previously re-sampled files. This is useful for the case when a large number of files are
+    being re-sampled, and the process is paused or interrupted. Using the generated 'manifest.txt', a
+    user would be able to pick up where the re-sampling process left off.
 
-
-# write audio to file. Input is tuple (write_path, audio)
-def write_audio(path, audio, sr, format='WAV'):
-    """
-    Create a new file path (if it doesn't exist already) and write audio to it in desired format.
-    :param path: Path to write to. Will be created if it doesn't exist. Will be overwritten if it does.
-    :param audio: The audio to save.
+    :param old_path: Path where original file exists.
+    :param new_path: Path to write to. Will be created if it doesn't exist. Will be overwritten if it does.
     :param sr: The sampling rate of the audio
-    :param format: the output format of the saved file. Default `WAV`. Use
+    :param ext: the output format of the saved file. Default `WAV`. Use
         `soundfile.available_formats()`
     :return:
     """
 
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with sf.SoundFile(path, 'w', sr, channels=1, format=format) as f:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        audio, sr = librosa.load(old_path, sr=sr)
+
+    os.makedirs(os.path.dirname(new_path), exist_ok=True)
+    with sf.SoundFile(new_path, 'w', sr, channels=1, format=ext) as f:
         f.write(audio)
 
+    # write filename to manifest as completed.
+    fname = os.path.basename(old_path)
+    mpath = os.path.join(ROOT_DIR, 'manifest.txt')
+    with open(mpath, 'a') as manifest:
+        manifest.write(fname + '\n')
 
-# rename extension
+
 def rename(file_path, ext='.wav'):
     """
-    Rename a file with a new extension (default .wav).
+    Renames a file by prepending it with "rs_" to signify that it has been resampled, and
+    change the extension to match the `ext` argument (default .wav).
+
     :param file_path:
     :param ext:
     :return:
     """
-    return os.path.splitext(file_path)[0] + ext
+    return 'rs_' + os.path.splitext(file_path)[0] + ext
 
 
-def resample_all(old_path, new_path, sr):
+def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
     """
     Re-sample audio data, save it in .wav format and move it to a new folder,
     allowing for two distinct data- sets and/or easy deletion of the original data.
@@ -70,46 +69,47 @@ def resample_all(old_path, new_path, sr):
 
     Both `curr_path` and `new_path` are relative to the project root.
 
-    :param old_path: path, relative to project root. This directory should contain
+    :param old_loc: path, relative to project root. This directory should contain
         a set of sub-directories corresponding to labelled audio data.
-    :param new_path: path, relative to project root. This directory will be created
+    :param new_loc: path, relative to project root. This directory will be created
         for the user, and will receive the re-sampled data in labelled sub-directories.
         This allows the user to easily delete the original audio data if they wish.
     :param sr: The desired rate to re-sample at
+    :param restart: If true, manifest keyword argument is mandatory. If true
+        this method will search through a log of previously resampled files
+        in order to prevent them from being resampled again. This is handy
+        if the er-sample process was interrupted part way through.
     :return: None
     """
 
-    folders = [d for d in os.scandir(old_path) if os.path.isdir(d.path)]
-    n_folders = len(folders)
+    folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
 
     for i, folder in enumerate(folders):
         dirname = folder.name
 
-        print(f'Working on folder {dirname}')
-        print(f'Progress: {int(100 * i / n_folders)}%')
+        if restart:
+            with open(manifest) as m:
+                completed = [line.strip() for line in m]
+            files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
+        else:
+            files = [f for f in os.scandir(folder) if os.path.isfile(f.path)]
 
-        files = [f.name for f in os.scandir(folder)]
-        renamed = map(rename, files)
-        r_paths = [f.path for f in os.scandir(folder)]
-        w_paths = [os.path.join(new_path, dirname, f) for f in renamed]
+        fpaths = [f.path for f in files]
+        fnames = [f.name for f in files]
+        renamed = map(rename, fnames)
+
+        new_paths = [os.path.join(new_loc, dirname, f) for f in renamed]
 
         with Pool(os.cpu_count()) as p:
-            print('Loading and Resampling Files...')
-            data = p.starmap(read_audio, zip(r_paths, [sr] * len(r_paths)))
-            print('Saving new files...')
-            aud, srs = zip(*data)
-            p.starmap(write_audio, zip(w_paths, aud, srs))
+            p.starmap(resample, zip(fpaths, new_paths, [sr] * len(fpaths)))
 
-
-if __name__ == '__main__':
-    from_path = os.path.join(ROOT_DIR, 'recordings')
-    to_path = os.path.join(ROOT_DIR, 'resampled')
-    resample_all(from_path, to_path, 100)
-
-    # Visually sure resample data looks like original:
-    a, _ = librosa.load(os.path.join(ROOT_DIR, 'resampled\\folder1\\high_pitch.wav'))
-    b, _ = librosa.load(os.path.join(ROOT_DIR, 'recordings\\folder1\\high_pitch.m4a'))
-    plt.plot(a)
-    plt.show()
-    plt.plot(b)
-    plt.show()
+def create_manifest(fpath, mpath):
+    """
+    Generates a log of pre-existing files in a data directory. Used to recover interrupted
+    re-sampling if a log is not already present.
+    """
+    folders = [f for f in os.scandir(fpath) if os.path.isdir(f.path)]
+    for folder in folders:
+        files = [fi.name + '\n' for fi in os.scandir(folder) if os.path.isfile(fi.path)]
+        with open(mpath, 'a') as manifest:
+            manifest.writelines(files)
