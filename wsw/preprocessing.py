@@ -4,6 +4,7 @@ from definitions import ROOT_DIR
 # File and I/O
 import warnings
 import os
+import sys
 
 # Audio I/O and processing
 import librosa
@@ -13,7 +14,7 @@ import soundfile as sf
 from multiprocessing import Pool
 
 
-def resample(old_path, new_path, sr, ext='WAV'):
+def resample(old_path, new_path, sr, ext='WAV', manifest=None):
     """
     Re-samples an audio file and writes it to a new location as a .wav file. This method also keeps a
     log of previously re-sampled files. This is useful for the case when a large number of files are
@@ -37,10 +38,10 @@ def resample(old_path, new_path, sr, ext='WAV'):
         f.write(audio)
 
     # write filename to manifest as completed.
-    fname = os.path.basename(old_path)
-    mpath = os.path.join(ROOT_DIR, 'manifest.txt')
-    with open(mpath, 'a') as manifest:
-        manifest.write(fname + '\n')
+    if manifest is not None:
+        fname = os.path.basename(old_path)
+        with open(manifest, 'a') as manifest:
+            manifest.write(fname + '\n')
 
 
 def rename(file_path, ext='.wav'):
@@ -79,18 +80,23 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
         this method will search through a log of previously resampled files
         in order to prevent them from being resampled again. This is handy
         if the er-sample process was interrupted part way through.
+    :param manifest: An optional argument giving a file path to a log for recording
+        what files have been successfully resampled and saved.
     :return: None
     """
 
     folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
 
     for i, folder in enumerate(folders):
+        sys.stdout.flush()
+        sys.stdout.write(f'Working on {i} of {len(folders)}')
+        sys.stdout.write(f'{int(100 * i / len(folders))}% complete. ')
         dirname = folder.name
 
         if restart:
             with open(manifest) as m:
-                completed = [line.strip() for line in m]
-            files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
+                completed = [line.strip()[:-4] for line in m]
+            files = [f for f in os.scandir(folder) if (f.name[:-4] not in completed) and os.path.isfile(f.path)]
         else:
             files = [f for f in os.scandir(folder) if os.path.isfile(f.path)]
 
@@ -107,9 +113,13 @@ def create_manifest(fpath, mpath):
     """
     Generates a log of pre-existing files in a data directory. Used to recover interrupted
     re-sampling if a log is not already present.
+
+    :param fpath: The location of the files you would like to add to the log.
+    :param mpath: The location you would like to save the log to.
     """
     folders = [f for f in os.scandir(fpath) if os.path.isdir(f.path)]
     for folder in folders:
         files = [fi.name + '\n' for fi in os.scandir(folder) if os.path.isfile(fi.path)]
         with open(mpath, 'a') as manifest:
             manifest.writelines(files)
+
