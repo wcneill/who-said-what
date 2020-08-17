@@ -106,7 +106,7 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
 
         new_paths = [os.path.join(new_loc, dirname, f) for f in renamed]
 
-        with Pool(os.cpu_count()) as p:
+        with Pool(os.cpu_count() - 1) as p:
             p.starmap(resample, zip(fpaths, new_paths, [sr] * len(fpaths)))
 
 def create_manifest(fpath, mpath):
