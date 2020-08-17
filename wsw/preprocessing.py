@@ -91,12 +91,12 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
     folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
 
     for i, folder in enumerate(folders):
-        print(f'Working on folder {folder}. Overall progress: {int(100 * i / len(folders))}   \r', end="")
+        print(f'Working on folder {folder.name}. Overall progress: {int(100 * i / len(folders))}%   \r', end="")
         dirname = folder.name
 
         if restart:
             with open(manifest) as m:
-                completed = list(set([line.strip() for line in m]))
+                completed = set([line.strip() for line in m])
             files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
         else:
             files = [f for f in os.scandir(folder) if os.path.isfile(f.path)]
@@ -108,7 +108,8 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
         new_paths = [os.path.join(new_loc, dirname, f) for f in renamed]
 
         with Pool(os.cpu_count() - 1) as p:
-            p.starmap(resample, zip(fpaths, new_paths, [sr] * len(fpaths), [manifest] * len(fpaths)))
+            N = len(fpaths)
+            p.starmap(resample, zip(fpaths, new_paths, [sr] * N, ['WAV'] * N, [manifest] * N))
 
 
 def create_manifest(fpath, mpath):

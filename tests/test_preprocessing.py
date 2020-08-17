@@ -27,7 +27,7 @@ def test_resample():
     assert os.path.isfile(save_to), "File did not save successfully"
     assert os.path.exists(os.path.join(ROOT_DIR, 'manifest.txt')), "Resampling log not successfully generated"
 
-    shutil.rmtree(save_to)
+    shutil.rmtree(os.path.dirname(save_to))
     os.remove(os.path.join(ROOT_DIR, 'manifest.txt'))
 
 
