@@ -26,6 +26,7 @@ def resample(old_path, new_path, sr, ext='WAV', manifest=None):
     :param sr: The sampling rate of the audio
     :param ext: the output format of the saved file. Default `WAV`. Use
         `soundfile.available_formats()`
+    :param manifest: Path to .txt or other file where you wish to write completed work.
     :return:
     """
 
@@ -38,10 +39,13 @@ def resample(old_path, new_path, sr, ext='WAV', manifest=None):
         f.write(audio)
 
     # write filename to manifest as completed.
+    fname = os.path.basename(old_path)
     if manifest is not None:
-        fname = os.path.basename(old_path)
         with open(manifest, 'a') as manifest:
             manifest.write(fname + '\n')
+    else:
+        with open(os.path.join(ROOT_DIR, 'manifest.txt'), 'a') as m:
+            m.write(fname + '\n')
 
 
 def rename(file_path, ext='.wav'):
@@ -88,15 +92,13 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
     folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
 
     for i, folder in enumerate(folders):
-        sys.stdout.flush()
-        sys.stdout.write(f'Working on {i} of {len(folders)}')
-        sys.stdout.write(f'{int(100 * i / len(folders))}% complete. ')
+        print(f'Working on folder {folder}. Overall progress: {int(100 * i / len(folders))}   \r', end="")
         dirname = folder.name
 
         if restart:
             with open(manifest) as m:
-                completed = [line.strip()[:-4] for line in m]
-            files = [f for f in os.scandir(folder) if (f.name[:-4] not in completed) and os.path.isfile(f.path)]
+                completed = list(set([line.strip() for line in m]))
+            files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
         else:
             files = [f for f in os.scandir(folder) if os.path.isfile(f.path)]
 
@@ -108,6 +110,7 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
 
         with Pool(os.cpu_count() - 1) as p:
             p.starmap(resample, zip(fpaths, new_paths, [sr] * len(fpaths)))
+
 
 def create_manifest(fpath, mpath):
     """
