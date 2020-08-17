@@ -4,7 +4,6 @@ from definitions import ROOT_DIR
 # File and I/O
 import warnings
 import os
-import sys
 
 # Audio I/O and processing
 import librosa
@@ -125,4 +124,3 @@ def create_manifest(fpath, mpath):
         files = [fi.name + '\n' for fi in os.scandir(folder) if os.path.isfile(fi.path)]
         with open(mpath, 'a') as manifest:
             manifest.writelines(files)
-
