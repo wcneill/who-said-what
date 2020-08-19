@@ -37,7 +37,8 @@ def resample(old_path, new_path, sr, ext='WAV', manifest=None):
         warnings.simplefilter("ignore", UserWarning)
         audio, sr = librosa.load(old_path, sr=sr)
 
-    os.makedirs(os.path.dirname(new_path), exist_ok=True)
+    if not os.path.exists(os.path.dirname(new_path)):
+        os.makedirs(os.path.dirname(new_path))
     with sf.SoundFile(new_path, 'w', sr, channels=1, format=ext) as f:
         f.write(audio)
 
@@ -96,7 +97,7 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
         with open(manifest) as m:
             completed = set([line.strip() for line in m])
 
-        folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
+    folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
 
     for i, folder in enumerate(folders):
         print(f'Working on folder {folder.name}. Overall progress: {int(100 * i / len(folders))}%   \r', end="")
@@ -118,7 +119,7 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
             p.starmap(resample, zip(fpaths, new_paths, [sr] * N, ['WAV'] * N, [manifest] * N))
 
 
-def clip_audio(audio, length, sr=22050, save_to=None):
+def clip_audio(audio, length, sr=22050, save_to=None, log=None):
     """
     clip or extend a signal by either cutting it short or padding it with zeros.
 
@@ -127,6 +128,8 @@ def clip_audio(audio, length, sr=22050, save_to=None):
         will be clipped and audio shorter than this value will be padded.
     :param sr: The sample rate of audio signal
     :param save_to: Location to save clipped audio to.
+    :param log: Optional log file location to track files that have already
+        been saved to file
     """
 
     m_samples = len(audio)
@@ -139,9 +142,13 @@ def clip_audio(audio, length, sr=22050, save_to=None):
         audio = np.concatenate((audio, np.zeros(to_add)))
 
     if save_to is not None:
-        os.makedirs(os.path.dirname(save_to), exist_ok=True)
+        if not os.path.exists(os.path.dirname(save_to)):
+            os.makedirs(os.path.dirname(save_to))
         with sf.SoundFile(save_to, mode='w', samplerate=sr, channels=1, format='WAV') as f:
             f.write(audio)
+        if log is not None:
+            with open(log, 'a') as m:
+                m.write(os.path.basename(save_to) + '\n')
     else:
         return audio, sr
 
@@ -149,7 +156,8 @@ def clip_audio(audio, length, sr=22050, save_to=None):
 def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
     """
     Clip or pad all files audio files found in the umbrella directory `fpath`
-    to a single desired length, then save to a new (or same) location.
+    to a single desired length, then save to a new (or same) location. Files
+    will be saved in the `.wav` format.
 
     :param fpath: The directory containing audio files in labelled folders. In
     other words, the directory `fpath` should contain sub-directories where
@@ -169,7 +177,7 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
         with open(log) as lg:
             completed = set([line.strip() for line in lg])
 
-        folders = [d for d in os.scandir(fpath) if os.path.isdir(d.path)]
+    folders = [d for d in os.scandir(fpath) if os.path.isdir(d.path)]
 
     for i, folder in enumerate(folders):
         dirname = folder.name
@@ -183,13 +191,18 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
         fpaths = [f.path for f in files]
         fnames = [f.name for f in files]
 
+        if not files:
+            print('ALL DONE DUDE(TTE)')
+            return 0
+            # exit(0)
+
         new_paths = [os.path.join(save_to, dirname, f) for f in fnames]
 
         with Pool(os.cpu_count() - 1) as p:
             N = len(files)
             z = p.starmap(librosa.load, zip(fpaths, [sr] * N))
             aud, _ = zip(*z)
-            p.starmap(clip_audio, zip(aud, length, [sr] * N, new_paths,))
+            p.starmap(clip_audio, zip(aud, [length] * N, [sr] * N, new_paths, [log] * N))
 
 
 
