@@ -16,8 +16,6 @@ class Fingerprint:
     :param sr: The desired sample rate to load audio data at
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
-
-
     """
     def __init__(self, audio_path, sr=22050, n_fft=512):
         y, sr = librosa.load(audio_path, sr)

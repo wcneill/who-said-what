@@ -73,3 +73,30 @@ def test_resample_all():
     shutil.rmtree(rand_loc1)
     shutil.rmtree(rand_loc2)
     os.remove(os.path.join(ROOT_DIR, 'manifest.txt'))
+
+
+def test_clip_audio():
+    """
+    Test to ensure audio file is clipped to correct length and written to disk successfully.
+    :return:
+    """
+    filename = librosa.ex('nutcracker')
+    audio, sr = librosa.load(filename)
+    length = len(audio) / sr
+
+    clip = length // 2
+    extend = int(length * 2)
+
+    aud1, sr1 = clip_audio(audio, clip, sr)
+    aud2, sr2 = clip_audio(audio, extend, sr )
+    assert len(aud1) / sr1 == clip, "Number of sample points does not meet meet expected length for clipped audio"
+    assert len(aud2) / sr2 == extend, "Number of sample points does not meet meet expected length for extended audio"
+
+    rand_loc = ''.join(random.choices(string.ascii_letters, k=6))
+    save_to = os.path.join(ROOT_DIR, rand_loc, 'test.wav')
+
+    clip_audio(audio, extend, sr, save_to=save_to)
+    assert os.path.exists(save_to), "Save to path was unsuccessful"
+    assert os.path.isfile(save_to), "File did not save successfully"
+
+    shutil.rmtree(os.path.dirname(save_to))

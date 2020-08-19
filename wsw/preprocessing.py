@@ -1,5 +1,6 @@
 # Project root directory
 from definitions import ROOT_DIR
+from wsw import fingerprint
 
 # File and I/O
 import warnings
@@ -8,6 +9,9 @@ import os
 # Audio I/O and processing
 import librosa
 import soundfile as sf
+
+# math
+import numpy as np
 
 # Multi-processing tools
 from multiprocessing import Pool
@@ -88,15 +92,17 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
     :return: None
     """
 
-    folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
+    if restart:
+        with open(manifest) as m:
+            completed = set([line.strip() for line in m])
+
+        folders = [d for d in os.scandir(old_loc) if os.path.isdir(d.path)]
 
     for i, folder in enumerate(folders):
         print(f'Working on folder {folder.name}. Overall progress: {int(100 * i / len(folders))}%   \r', end="")
         dirname = folder.name
 
         if restart:
-            with open(manifest) as m:
-                completed = set([line.strip() for line in m])
             files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
         else:
             files = [f for f in os.scandir(folder) if os.path.isfile(f.path)]
@@ -112,16 +118,119 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
             p.starmap(resample, zip(fpaths, new_paths, [sr] * N, ['WAV'] * N, [manifest] * N))
 
 
-def create_manifest(fpath, mpath):
+def clip_audio(audio, length, sr=22050, save_to=None):
     """
-    Generates a log of pre-existing files in a data directory. Used to recover interrupted
-    re-sampling if a log is not already present.
+    clip or extend a signal by either cutting it short or padding it with zeros.
 
-    :param fpath: The location of the files you would like to add to the log.
-    :param mpath: The location you would like to save the log to.
+    :param audio: a 1D numpy array representing the signal you wish to clip or pad.
+    :param length: Length to clip or pad audio to. Audio longer than this value
+        will be clipped and audio shorter than this value will be padded.
+    :param sr: The sample rate of audio signal
+    :param save_to: Location to save clipped audio to.
     """
-    folders = [f for f in os.scandir(fpath) if os.path.isdir(f.path)]
-    for folder in folders:
-        files = [fi.name + '\n' for fi in os.scandir(folder) if os.path.isfile(fi.path)]
-        with open(mpath, 'a') as manifest:
-            manifest.writelines(files)
+
+    m_samples = len(audio)
+    n_keep = int(length * sr)
+
+    if m_samples > n_keep:
+        audio = audio[:n_keep]
+    if m_samples < n_keep:
+        to_add = n_keep - m_samples
+        audio = np.concatenate((audio, np.zeros(to_add)))
+
+    if save_to is not None:
+        os.makedirs(os.path.dirname(save_to), exist_ok=True)
+        with sf.SoundFile(save_to, mode='w', samplerate=sr, channels=1, format='WAV') as f:
+            f.write(audio)
+    else:
+        return audio, sr
+
+
+def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
+    """
+    Clip or pad all files audio files found in the umbrella directory `fpath`
+    to a single desired length, then save to a new (or same) location.
+
+    :param fpath: The directory containing audio files in labelled folders. In
+    other words, the directory `fpath` should contain sub-directories where
+    each sub-directory is a unique label for the data within.
+    :param save_to: The location to save the clipped files too. Original
+        labelled file structure will be preserved.
+    :param length: The length to cut or pad variable length audio signal to.
+    :param sr: The sample rate of the audio being fingerprinted.
+    :param restart: If true then the `log` argument is mandatory. When true,
+        this method will look for a log file containing a list of already
+        fingerprinted files.
+    :param log: The path to the log which tracks the already completed files.
+        This argument is mandatory if `restart=True`.
+    """
+
+    if restart:
+        with open(log) as lg:
+            completed = set([line.strip() for line in lg])
+
+        folders = [d for d in os.scandir(fpath) if os.path.isdir(d.path)]
+
+    for i, folder in enumerate(folders):
+        dirname = folder.name
+        print(f'Working on folder {dirname}. Overall progress: {int(100 * i / len(folders))}%   \r', end="")
+
+        if restart:
+            files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
+        else:
+            files = [f for f in os.scandir(folder) if os.path.isfile(f.path)]
+
+        fpaths = [f.path for f in files]
+        fnames = [f.name for f in files]
+
+        new_paths = [os.path.join(save_to, dirname, f) for f in fnames]
+
+        with Pool(os.cpu_count() - 1) as p:
+            N = len(files)
+            z = p.starmap(librosa.load, zip(fpaths, [sr] * N))
+            aud, _ = zip(*z)
+            p.starmap(clip_audio, zip(aud, length, [sr] * N, new_paths,))
+
+
+
+# def fingerprint_all(fpath, save_to, length, sr, restart=False, log=None):
+#     """
+#     Fingerprint all files audio files found in the umbrella directory `fpath`.
+#
+#     :param fpath: The directory containing audio files in labelled folders. In
+#     other words, the directory `fpath` should contain sub-directories where
+#     each sub-directory is a unique label for the data within.
+#     :param length: The length to cut or pad variable length audio signal to.
+#     :param sr: The sample rate of the audio being fingerprinted.
+#     :param restart: If true then the `log` argument is mandatory. When true,
+#         this method will look for a log file containing a list of already
+#         fingerprinted files.
+#     :param log: The path to the log which tracks the already completed files.
+#         This argument is mandatory if `restart=True`.
+#     """
+#     if restart:
+#         with open(log) as lg:
+#             completed = set([line.strip() for line in lg])
+#
+#         folders = [d for d in os.scandir(fpath) if os.path.isdir(d.path)]
+#
+#     for i, folder in enumerate(folders):
+#         dirname = folder.name
+#         print(f'Working on folder {dirname}. Overall progress: {int(100 * i / len(folders))}%   \r', end="")
+#
+#
+#         if restart:
+#             files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
+#         else:
+#             files = [f for f in os.scandir(folder) if os.path.isfile(f.path)]
+#
+#         fpaths = [f.path for f in files]
+#         fnames = [f.name for f in files]
+#
+#         new_paths = [os.path.join(save_to, dirname, f) for f in fnames]
+#
+#         with Pool(os.cpu_count() - 1) as p:
+#             N = len(fpaths)
+#             p.starmap()
+#             p.starmap(resample, zip(fpaths, new_paths, [sr] * N, ['WAV'] * N, [manifest] * N))
+
