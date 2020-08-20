@@ -90,7 +90,7 @@ def test_clip_audio():
     extend = int(length * 2)
 
     aud1, sr1 = clip_audio(audio, clip, sr)
-    aud2, sr2 = clip_audio(audio, extend, sr )
+    aud2, sr2 = clip_audio(audio, extend, sr)
     assert len(aud1) / sr1 == clip, "Number of sample points does not meet meet expected length for clipped audio"
     assert len(aud2) / sr2 == extend, "Number of sample points does not meet meet expected length for extended audio"
 

@@ -201,10 +201,8 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
         with Pool(os.cpu_count() - 1) as p:
             N = len(files)
             z = p.starmap(librosa.load, zip(fpaths, [sr] * N))
-            aud, _ = zip(*z)
-            p.starmap(clip_audio, zip(aud, [length] * N, [sr] * N, new_paths, [log] * N))
-
-
+            aud, srs = zip(*z)
+            p.starmap(clip_audio, zip(aud, [length] * N, [srs] * N, new_paths, [log] * N))
 
 # def fingerprint_all(fpath, save_to, length, sr, restart=False, log=None):
 #     """
@@ -246,4 +244,3 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
 #             N = len(fpaths)
 #             p.starmap()
 #             p.starmap(resample, zip(fpaths, new_paths, [sr] * N, ['WAV'] * N, [manifest] * N))
-
