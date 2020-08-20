@@ -141,9 +141,9 @@ def clip_audio(audio, length, sr=22050, save_to=None, log=None):
         to_add = n_keep - m_samples
         audio = np.concatenate((audio, np.zeros(to_add)))
 
+    print(save_to)
     if save_to is not None:
         if not os.path.exists(os.path.dirname(save_to)):
-            print('Path Does Exist')
             os.makedirs(os.path.dirname(save_to))
         with sf.SoundFile(save_to, mode='w', samplerate=sr, channels=1, format='WAV') as f:
             f.write(audio)
@@ -202,7 +202,7 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
               aud, srs = zip(*z)
               p.starmap(clip_audio, zip(aud, [length] * N, srs, new_paths, [log] * N))
 
-    print('\nOverall progress: 100%')
+    print('\nResizing of all audio files complete.')
 
 # def fingerprint_all(fpath, save_to, length, sr, restart=False, log=None):
 #     """
