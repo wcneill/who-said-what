@@ -143,6 +143,7 @@ def clip_audio(audio, length, sr=22050, save_to=None, log=None):
 
     if save_to is not None:
         if not os.path.exists(os.path.dirname(save_to)):
+            print('Path Does Exist')
             os.makedirs(os.path.dirname(save_to))
         with sf.SoundFile(save_to, mode='w', samplerate=sr, channels=1, format='WAV') as f:
             f.write(audio)
@@ -177,7 +178,8 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
         with open(log) as lg:
             completed = set([line.strip() for line in lg])
 
-    folders = [d for d in os.scandir(fpath) if os.path.isdir(d.path)]
+    folders = [d for d in os.scandir(fpath) if os.path.isdir(d.path) if not d.name.startswith('.')]
+    print(folders)
 
     for i, folder in enumerate(folders):
         dirname = folder.name
@@ -191,18 +193,16 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
         fpaths = [f.path for f in files]
         fnames = [f.name for f in files]
 
-        if not files:
-            print('ALL DONE DUDE(TTE)')
-            return 0
-            # exit(0)
+        if files:
+            new_paths = [os.path.join(save_to, dirname, f) for f in fnames]
 
-        new_paths = [os.path.join(save_to, dirname, f) for f in fnames]
+            with Pool(os.cpu_count() - 1) as p:
+              N = len(files)
+              z = p.starmap(librosa.load, zip(fpaths, [sr] * N))
+              aud, srs = zip(*z)
+              p.starmap(clip_audio, zip(aud, [length] * N, srs, new_paths, [log] * N))
 
-        with Pool(os.cpu_count() - 1) as p:
-            N = len(files)
-            z = p.starmap(librosa.load, zip(fpaths, [sr] * N))
-            aud, srs = zip(*z)
-            p.starmap(clip_audio, zip(aud, [length] * N, [srs] * N, new_paths, [log] * N))
+    print('\nOverall progress: 100%')
 
 # def fingerprint_all(fpath, save_to, length, sr, restart=False, log=None):
 #     """
