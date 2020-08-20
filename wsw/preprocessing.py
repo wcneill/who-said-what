@@ -38,7 +38,10 @@ def resample(old_path, new_path, sr, ext='WAV', manifest=None):
         audio, sr = librosa.load(old_path, sr=sr)
 
     if not os.path.exists(os.path.dirname(new_path)):
-        os.makedirs(os.path.dirname(new_path))
+        try:
+            os.makedirs(os.path.dirname(new_path))
+        except FileExistsError:
+            pass
     with sf.SoundFile(new_path, 'w', sr, channels=1, format=ext) as f:
         f.write(audio)
 
@@ -141,12 +144,12 @@ def clip_audio(audio, length, sr=22050, save_to=None, log=None):
         to_add = n_keep - m_samples
         audio = np.concatenate((audio, np.zeros(to_add)))
 
-    print(save_to)
     if save_to is not None:
         if not os.path.exists(os.path.dirname(save_to)):
+            print(os.path.exists(os.path.dirname(save_to)))
+            print('Why are you here if the path exists???')
             os.makedirs(os.path.dirname(save_to))
-        with sf.SoundFile(save_to, mode='w', samplerate=sr, channels=1, format='WAV') as f:
-            f.write(audio)
+
         if log is not None:
             with open(log, 'a') as m:
                 m.write(os.path.basename(save_to) + '\n')
@@ -183,7 +186,7 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
 
     for i, folder in enumerate(folders):
         dirname = folder.name
-        print(f'Working on folder {dirname}. Overall progress: {int(100 * i / len(folders))}%   \r', end="")
+        # print(f'Working on folder {dirname}. Overall progress: {int(100 * i / len(folders))}%   \r', end="")
 
         if restart:
             files = [f for f in os.scandir(folder) if (f.name not in completed) and os.path.isfile(f.path)]
