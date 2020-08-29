@@ -207,6 +207,11 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
 
     print('\nResizing of all audio files complete.')
 
+
+def split_n_mix(audio, sr, thresh):
+    return librosa.effects.remix(librosa.effects.split())
+
+
 # def fingerprint_all(fpath, save_to, length, sr, restart=False, log=None):
 #     """
 #     Fingerprint all files audio files found in the umbrella directory `fpath`.

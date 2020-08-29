@@ -25,7 +25,8 @@ class Fingerprint:
         self.fingerprint = self.get_prints(self.signal, sr, n_fft)
 
     def show(self):
-        plt.spy(self.fingerprint, origin='lower', aspect='auto')
+        D = librosa.amplitude_to_db(self.fingerprint)
+        img = librosa.display.specshow(D, y_axis='linear', x_axis='time', sr=self.sr)
         plt.show()
 
     @staticmethod
@@ -43,7 +44,7 @@ class Fingerprint:
         Compute the STFT/spectrogram of given signal with Hamming Window
 
         :param signal: The audio signal to perform STFT on.
-        "param N: The number of
+        "param N: The number of ffts
         """
         spec = librosa.stft(signal, n_fft=N, window=sig.windows.hamming)
         return np.abs(spec)
