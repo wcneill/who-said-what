@@ -1,5 +1,6 @@
 import scipy.signal as sig
 import librosa
+import librosa.display
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -17,10 +18,10 @@ class Fingerprint:
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
-    def __init__(self, audio_path, sr=22050, n_fft=512):
-        y, sr = librosa.load(audio_path, sr)
+    def __init__(self, audio_path, n_fft=512):
+        y, sr = librosa.load(audio_path, sr=None)
+        self.sr = None
         self.signal = y
-        self.sr = sr
         self.n_fft = n_fft
         self.fingerprint = self.get_prints(self.signal, sr, n_fft)
 
@@ -29,13 +30,13 @@ class Fingerprint:
         img = librosa.display.specshow(D, y_axis='linear', x_axis='time', sr=self.sr)
         plt.show()
 
-    @staticmethod
-    def get_prints(signal, sr, n_fft):
+    def get_prints(self, signal, sr, n_fft):
         signal = Fingerprint._lpfilter(signal, sr)
         signal = Fingerprint._downsample(signal, sr, new_sr=11025)
         spec = Fingerprint.stft(signal, n_fft)
         spec = Fingerprint.denoise(spec)
         spec = Fingerprint.spec_filter(spec, 6)
+        self.sr = 11025
         return spec
 
     @staticmethod
