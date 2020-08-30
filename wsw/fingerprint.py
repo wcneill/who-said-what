@@ -44,7 +44,7 @@ class Fingerprint:
     @staticmethod
     def stft(signal, N):
         """
-        Compute the STFT/spectrogram of given signal with Hamming Window
+        Compute the real valued STFT/spectrogram of given signal with Hamming Window
 
         :param signal: The audio signal to perform STFT on.
         :param N: The number of ffts
