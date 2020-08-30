@@ -25,16 +25,19 @@ class Fingerprint:
         self.fingerprint = self.get_prints(self.signal, sr, n_fft)
 
     def show(self):
+        """
+        This method displays the fingerprint via matplotlib
+        """
         d = librosa.amplitude_to_db(self.fingerprint)
         librosa.display.specshow(d, y_axis='linear', x_axis='time', sr=self.sr)
         plt.show()
 
     def get_prints(self, signal, sr, n_fft):
         signal = Fingerprint._lpfilter(signal, sr)
-        signal = Fingerprint._downsample(signal, sr, new_sr=11025)
+        signal = librosa.resample(signal, sr, 11025)
         spec = Fingerprint.stft(signal, n_fft)
-        spec = Fingerprint.denoise(spec)
-        spec = Fingerprint.spec_filter(spec, 6)
+        spec = librosa.decompose.nn_filter(spec)
+        spec = Fingerprint._spec_filter(spec, 6)
         self.sr = 11025
         return spec
 
@@ -75,7 +78,7 @@ class Fingerprint:
         return np.where(joined_filtered < thresh * alpha, 0, joined_filtered)
 
     @staticmethod
-    def spec_filter(spec, n_bins):
+    def _spec_filter(spec, n_bins):
         """
         Iteratively filter the DFTs that make up a spectrogram, leaving a sparse matrix
         representing the strongest frequencies over the time domain. See `Fingerprint.ft_filter`
@@ -91,28 +94,28 @@ class Fingerprint:
 
     @staticmethod
     def _lpfilter(signal, sr):
-        """Helper method. Applies Low-pass filter that attenuates at 10kHz"""
+        """
+        Helper method. Applies Low-pass filter that attenuates at 10kHz
+
+        :param signal: The signal to filter
+        :param sr: The sample rate of the signal
+        """
         cutoff = 10e3
         sos = sig.butter(10, cutoff, fs=sr, btype='lowpass', analog=False, output='sos')
         return sig.sosfilt(sos, signal)
 
     @staticmethod
     def _log_bin(arr, n_bins):
-        """Helper method. Divide spectrogram frequency bins logarithmically"""
+        """
+        Helper method. Divide spectrogram frequency bins logarithmically
+
+        :param arr: The array to divide.
+        :param n_bins: The number of bins to divide the array into.
+        """
         bands = np.array([10 * 2 ** i for i in range(n_bins - 1)])
         idxs = np.arange(len(arr))
         split_arr = np.split(arr, np.searchsorted(idxs, bands))
         return split_arr
-
-    @staticmethod
-    def denoise(spectrogram):
-        """Noise filter"""
-        return librosa.decompose.nn_filter(spectrogram)
-
-    @staticmethod
-    def _downsample(signal, old_sr, new_sr):
-        """Helper Method. resample data."""
-        return librosa.resample(signal, old_sr, new_sr)
 
 
 if __name__ == '__main__':
