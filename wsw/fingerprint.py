@@ -37,7 +37,7 @@ class Fingerprint:
         signal = librosa.resample(signal, sr, 11025)
         spec = Fingerprint.stft(signal, n_fft)
         spec = librosa.decompose.nn_filter(spec)
-        spec = Fingerprint._spec_filter(spec, 6)
+        spec = Fingerprint.spec_filter(spec, 6)
         self.sr = 11025
         return spec
 
@@ -78,7 +78,7 @@ class Fingerprint:
         return np.where(joined_filtered < thresh * alpha, 0, joined_filtered)
 
     @staticmethod
-    def _spec_filter(spec, n_bins):
+    def spec_filter(spec, n_bins):
         """
         Iteratively filter the DFTs that make up a spectrogram, leaving a sparse matrix
         representing the strongest frequencies over the time domain. See `Fingerprint.ft_filter`

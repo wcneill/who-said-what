@@ -43,12 +43,12 @@ def test_ft_filter(fp):
 def test_spec_filter(fp):
     """
     Assures that a filtered spectrogram has a mix of non-zero and zero valued entries,
-    as `_spec_filter` is expected to return a sparse matrix.
+    as `spec_filter` is expected to return a sparse matrix.
     :param fp:
     :return:
     """
     spec = librosa.stft(fp.signal)
-    filtered = fp._spec_filter(spec, 6)
+    filtered = fp.spec_filter(spec, 6)
     assert (filtered == 0).any(), "No zero valued elements but filter is expected to return sparse matrix"
     if (filtered == 0).all():
         assert (spec == 0).all(), "Filtered spectrogram is empty despite non-empty spectrogram input"
