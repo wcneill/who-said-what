@@ -14,7 +14,6 @@ class Fingerprint:
     of the original signal.
 
     :param audio_path: The path from which to load audio data for fingerprinting
-    :param sr: The desired sample rate to load audio data at
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
@@ -26,8 +25,8 @@ class Fingerprint:
         self.fingerprint = self.get_prints(self.signal, sr, n_fft)
 
     def show(self):
-        D = librosa.amplitude_to_db(self.fingerprint)
-        img = librosa.display.specshow(D, y_axis='linear', x_axis='time', sr=self.sr)
+        d = librosa.amplitude_to_db(self.fingerprint)
+        librosa.display.specshow(d, y_axis='linear', x_axis='time', sr=self.sr)
         plt.show()
 
     def get_prints(self, signal, sr, n_fft):
@@ -45,7 +44,7 @@ class Fingerprint:
         Compute the STFT/spectrogram of given signal with Hamming Window
 
         :param signal: The audio signal to perform STFT on.
-        "param N: The number of ffts
+        :param N: The number of ffts
         """
         spec = librosa.stft(signal, n_fft=N, window=sig.windows.hamming)
         return np.abs(spec)
