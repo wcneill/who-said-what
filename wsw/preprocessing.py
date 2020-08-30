@@ -1,6 +1,5 @@
 # Project root directory
 from definitions import ROOT_DIR
-from wsw import fingerprint
 
 # File and I/O
 import warnings
@@ -118,8 +117,8 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
         new_paths = [os.path.join(new_loc, dirname, f) for f in renamed]
 
         with Pool(os.cpu_count() - 1) as p:
-            N = len(fpaths)
-            p.starmap(resample, zip(fpaths, new_paths, [sr] * N, ['WAV'] * N, [manifest] * N))
+            n = len(fpaths)
+            p.starmap(resample, zip(fpaths, new_paths, [sr] * n, ['WAV'] * n, [manifest] * n))
 
 
 def clip_audio(audio, length, sr=22050, save_to=None, log=None):
@@ -148,7 +147,12 @@ def clip_audio(audio, length, sr=22050, save_to=None, log=None):
         if not os.path.exists(os.path.dirname(save_to)):
             print(os.path.exists(os.path.dirname(save_to)))
             print('Why are you here if the path exists???')
-            os.makedirs(os.path.dirname(save_to))
+            try:
+                os.makedirs(os.path.dirname(save_to))
+            except FileExistsError:
+                pass
+            with sf.SoundFile(save_to, 'w', sr, channels=1) as f:
+                f.write(audio)
 
         if log is not None:
             with open(log, 'a') as m:
@@ -200,16 +204,16 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
             new_paths = [os.path.join(save_to, dirname, f) for f in fnames]
 
             with Pool(os.cpu_count() - 1) as p:
-              N = len(files)
-              z = p.starmap(librosa.load, zip(fpaths, [sr] * N))
-              aud, srs = zip(*z)
-              p.starmap(clip_audio, zip(aud, [length] * N, srs, new_paths, [log] * N))
+                n = len(files)
+                z = p.starmap(librosa.load, zip(fpaths, [sr] * n))
+                aud, srs = zip(*z)
+                p.starmap(clip_audio, zip(aud, [length] * n, srs, new_paths, [log] * n))
 
     print('\nResizing of all audio files complete.')
 
 
-def split_n_mix(audio, sr, thresh):
-    return librosa.effects.remix(librosa.effects.split())
+# def split_n_mix(audio, sr, thresh):
+#     return librosa.effects.remix(librosa.effects.split())
 
 
 # def fingerprint_all(fpath, save_to, length, sr, restart=False, log=None):
