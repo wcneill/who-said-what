@@ -7,11 +7,12 @@ import matplotlib.pyplot as plt
 
 class Fingerprint:
     """
-    This is a simple class that contains class variables describing audio data. These
-    class variables can be thought of as 'fingerprints' of the original audio signal.
-    Currently, the fingerprint class stores two forms of the data: Original signal and
-    a filtered spectrogram which is a sparse matrix describing the most dominant frequencies
-    of the original signal.
+    This is a simple class that contains class variables describing  different views
+    of the same audio data.
+
+    The fingerprint object stores four total views of audio data: The original signal,
+    a STFT spectrogram, a reduced spectrogram containing only the most powerful
+    frequencies, and a mel cepstrum.
 
     :param audio_path: The path from which to load audio data for fingerprinting
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
@@ -28,7 +29,7 @@ class Fingerprint:
         """
         This method displays the fingerprint via matplotlib
         """
-        d = librosa.amplitude_to_db(self.fingerprint)
+        d = librosa.amplitude_to_db(self.fingerprint[1])
         librosa.display.specshow(d, y_axis='linear', x_axis='time', sr=self.sr)
         plt.show()
 
@@ -38,10 +39,11 @@ class Fingerprint:
             signal = librosa.resample(signal, sr, rsr)
             self.sr = rsr
         spec = Fingerprint.stft(signal, n_fft)
-        spec = librosa.decompose.nn_filter(spec)
-        spec = Fingerprint.spec_filter(spec, 6)
+        # spec = librosa.decompose.nn_filter(spec)
+        sparse_spec = Fingerprint.spec_filter(spec, 6)
+        mel_spec = librosa.feature.melspectrogram(S=spec, sr=self.sr)
 
-        return spec
+        return spec, mel_spec, sparse_spec
 
     @staticmethod
     def stft(signal, N):
