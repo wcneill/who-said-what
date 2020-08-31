@@ -43,7 +43,7 @@ def test_ft_filter(fp):
 def test_spec_filter(fp):
     """
     Assures that a filtered spectrogram has a mix of non-zero and zero valued entries,
-    as `spec_filter` is expected to return a sparse matrix.
+    as `spec_filter` is expected to return a sparse matrix (fingerprint object).
     :param fp:
     :return:
     """

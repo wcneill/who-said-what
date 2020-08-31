@@ -59,8 +59,8 @@ def rename(file_path, ext='.wav'):
     Renames a file by prepending it with "rs_" to signify that it has been resampled, and
     change the extension to match the `ext` argument (default .wav).
 
-    :param file_path:
-    :param ext:
+    :param file_path: file path to rename with .wav (or other) extension
+    :param ext: The replacement extension
     :return:
     """
     return 'rs_' + os.path.splitext(file_path)[0] + ext
@@ -210,10 +210,6 @@ def clip_all(fpath, save_to, length, sr=None, restart=False, log=None):
                 p.starmap(clip_audio, zip(aud, [length] * n, srs, new_paths, [log] * n))
 
     print('\nResizing of all audio files complete.')
-
-
-# def split_n_mix(audio, sr, thresh):
-#     return librosa.effects.remix(librosa.effects.split())
 
 
 # def fingerprint_all(fpath, save_to, length, sr, restart=False, log=None):
