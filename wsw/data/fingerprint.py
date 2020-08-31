@@ -17,12 +17,12 @@ class Fingerprint:
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
-    def __init__(self, audio_path, n_fft=512):
+    def __init__(self, audio_path, rsr=11025, n_fft=512):
         y, sr = librosa.load(audio_path, sr=None)
-        self.sr = None
+        self.sr = sr
         self.signal = y
         self.n_fft = n_fft
-        self.fingerprint = self.get_prints(self.signal, sr, n_fft)
+        self.fingerprint = self.get_prints(self.signal, sr, rsr, n_fft)
 
     def show(self):
         """
@@ -32,13 +32,15 @@ class Fingerprint:
         librosa.display.specshow(d, y_axis='linear', x_axis='time', sr=self.sr)
         plt.show()
 
-    def get_prints(self, signal, sr, n_fft):
+    def get_prints(self, signal, sr, rsr, n_fft):
         signal = Fingerprint._lpfilter(signal, sr)
-        signal = librosa.resample(signal, sr, 11025)
+        if sr != rsr:
+            signal = librosa.resample(signal, sr, rsr)
+            self.sr = rsr
         spec = Fingerprint.stft(signal, n_fft)
         spec = librosa.decompose.nn_filter(spec)
         spec = Fingerprint.spec_filter(spec, 6)
-        self.sr = 11025
+
         return spec
 
     @staticmethod
@@ -95,12 +97,12 @@ class Fingerprint:
     @staticmethod
     def _lpfilter(signal, sr):
         """
-        Helper method. Applies Low-pass filter that attenuates at 10kHz
+        Helper method. Applies Low-pass filter that attenuates at 5kHz
 
         :param signal: The signal to filter
         :param sr: The sample rate of the signal
         """
-        cutoff = 10e3
+        cutoff = 5e3
         sos = sig.butter(10, cutoff, fs=sr, btype='lowpass', analog=False, output='sos')
         return sig.sosfilt(sos, signal)
 
