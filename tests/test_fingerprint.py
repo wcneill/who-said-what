@@ -1,4 +1,4 @@
-from wsw.fingerprint import *
+from wsw.data.fingerprint import *
 import librosa
 import numpy as np
 import pytest

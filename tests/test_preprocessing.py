@@ -1,4 +1,4 @@
-from wsw.preprocessing import *
+from wsw.data.preprocessing import *
 from definitions import ROOT_DIR
 
 # for generating random test files
