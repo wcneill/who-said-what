@@ -19,27 +19,32 @@ class Fingerprint:
         fingerprint of the original audio data.
     """
     def __init__(self, audio_path, rsr=11025, n_fft=512):
-        y, sr = librosa.load(audio_path, sr=None)
-        self.sr = sr
-        self.signal = y
+        self.signal, self.sr = librosa.load(audio_path, sr=None)
         self.n_fft = n_fft
-        self.fingerprint = self.get_prints(self.signal, sr, rsr, n_fft)
+        self.fingerprint = self.get_prints(self.signal, self.sr, rsr, n_fft)
 
     def show(self):
         """
-        This method displays the fingerprint via matplotlib
+        This method displays the fingerprint data via matplotlib
         """
-        d = librosa.amplitude_to_db(self.fingerprint[1])
-        librosa.display.specshow(d, y_axis='linear', x_axis='time', sr=self.sr)
+
+        fig, axes = plt.subplots(1, 3, figsize=(10, 3))
+        specs = (librosa.amplitude_to_db(self.fingerprint[i]) for i in range(3))
+        scales = ('hz', 'mel', 'hz')
+
+        for i, (sp, sc) in enumerate(zip(specs, scales)):
+            librosa.display.specshow(sp, x_axis='time', y_axis=sc, sr=self.sr, ax=axes[i])
+
+        plt.tight_layout()
         plt.show()
 
     def get_prints(self, signal, sr, rsr, n_fft):
-        signal = Fingerprint._lpfilter(signal, sr)
-        if sr != rsr:
-            signal = librosa.resample(signal, sr, rsr)
-            self.sr = rsr
+
+        if rsr:
+            signal = Fingerprint._lpfilter(signal, sr, rsr)
+            signal, self.sr = librosa.resample(signal, sr, rsr), rsr
+
         spec = Fingerprint.stft(signal, n_fft)
-        # spec = librosa.decompose.nn_filter(spec)
         sparse_spec = Fingerprint.spec_filter(spec, 6)
         mel_spec = librosa.feature.melspectrogram(S=spec, sr=self.sr)
 
@@ -53,6 +58,7 @@ class Fingerprint:
         :param signal: The audio signal to perform STFT on.
         :param N: The number of ffts
         """
+
         spec = librosa.stft(signal, n_fft=N, window=sig.windows.hamming)
         return np.abs(spec)
 
@@ -97,14 +103,18 @@ class Fingerprint:
         return filtered.T
 
     @staticmethod
-    def _lpfilter(signal, sr):
+    def _lpfilter(signal, sr, rsr):
         """
-        Helper method. Applies Low-pass filter that attenuates at 5kHz
+        Helper method. Attenuates signal frequencies in preparation for down sampling
+        in order to prevent aliasing during the downsampling process. For this reason,
+        the filter attenuates frequencies that are above the desired resampling rate
+        divided by 2.
 
         :param signal: The signal to filter
-        :param sr: The sample rate of the signal
+        :param sr: The sample rate of the original signal
+        :param rsr: The rate to which the original signal will be downsampled.
         """
-        cutoff = 5e3
+        cutoff = rsr / 2
         sos = sig.butter(10, cutoff, fs=sr, btype='lowpass', analog=False, output='sos')
         return sig.sosfilt(sos, signal)
 
