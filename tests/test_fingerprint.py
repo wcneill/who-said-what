@@ -7,8 +7,8 @@ import pytest
 @pytest.fixture
 def fp():
     filename = librosa.example('nutcracker')
-    a, s = librosa.load(filename)
-    return Fingerprint(a, s)
+    audio, rate = librosa.load(filename)
+    return Fingerprint(audio, rate)
 
 
 def test_constructor(fp):
@@ -22,9 +22,9 @@ def test_log_bin():
     """
     Method tests that the correct number of bins is created
     """
-    a = np.arange(512)
+    b = np.arange(512)
     n_bins = 6
-    assert len(Fingerprint._log_bin(a, n_bins)) == n_bins, "array divided into incorrect number of bins"
+    assert len(Fingerprint._log_bin(b, n_bins)) == n_bins, "array divided into incorrect number of bins"
 
 
 def test_ft_filter(fp):
