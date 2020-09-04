@@ -20,7 +20,7 @@ class Fingerprint:
         fingerprint of the original audio data.
     """
 
-    def __init__(self, y, sr, n_fft=512):
+    def __init__(self, y, sr, rsr=11025, n_fft=512):
         self.signal = y
         self.sr = sr
         self.n_fft = n_fft
