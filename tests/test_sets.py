@@ -7,7 +7,7 @@ import os
 
 
 @pytest.fixture
-def testset():
+def rootdir():
 
     f1 = li.ex('trumpet')
     f2 = li.ex('nutcracker')
@@ -20,14 +20,13 @@ def testset():
         'Speakers': [1, 2, 3]
     })
 
-    root = os.path.dirname(f1)
-
     df.to_csv('test.csv', index=False)
-    return AudioImageSet('test.csv', root)
+    return os.path.dirname(f1)
 
 
-def test_get_item(testset):
-    assert len(testset) == 3, \
+def test_ais_get_item(rootdir):
+    ais = AudioImageSet('test.csv', rootdir)
+    assert len(ais) == 3, \
         'Test set does not contain 3 audio samples (it should)'
-    assert testset[0]['image'].shape == (3, testset.size[0], testset.size[1]), \
+    assert ais[0]['image'].shape == (3, ais.size[0], ais.size[1]), \
         "Sample image size does not meet AudioImageSet parameter `size`"
