@@ -14,12 +14,15 @@ class Fingerprint:
     a STFT spectrogram, a reduced spectrogram containing only the most powerful
     frequencies, and a mel cepstrum.
 
-    :param audio_path: The path from which to load audio data for fingerprinting
+    :param y: Numpy array containing the audio data to fingerprint
+    :param sr: The sample rate of the signal y.
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
-    def __init__(self, audio_path, rsr=11025, n_fft=512):
-        self.signal, self.sr = librosa.load(audio_path, sr=None)
+
+    def __init__(self, y, sr, n_fft=512):
+        self.signal = y
+        self.sr = sr
         self.n_fft = n_fft
         self.fingerprint = self.get_prints(self.signal, self.sr, rsr, n_fft)
 
@@ -134,5 +137,6 @@ class Fingerprint:
 
 if __name__ == '__main__':
     path = librosa.ex('trumpet')
-    fp = Fingerprint(path)
+    a, s = librosa.load(path)
+    fp = Fingerprint(a, s)
     fp.show()

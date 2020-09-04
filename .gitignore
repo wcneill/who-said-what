@@ -127,3 +127,6 @@ dmypy.json
 
 # PyCharm Stuff
 .idea/
+
+# Jupyter Notebook "scrap paper"
+scrap_paper/
