@@ -1,4 +1,3 @@
-from wsw.data.fingerprint import Fingerprint
 from wsw.data.sets import *
 import pytest
 
@@ -32,6 +31,3 @@ def test_get_item(testset):
         'Test set does not contain 3 audio samples (it should)'
     assert testset[0]['image'].shape == (3, testset.size[0], testset.size[1]), \
         "Sample image size does not meet AudioImageSet parameter `size`"
-
-
-
