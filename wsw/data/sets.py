@@ -20,6 +20,9 @@ import seaborn as sns
 # DataFrame
 import pandas as pd
 
+# Internal modules
+from wsw.data.fingerprint import Fingerprint
+
 
 class AudioImageSet(Dataset):
     """
@@ -52,6 +55,7 @@ class AudioImageSet(Dataset):
             if self.transform:
                 audio, sr = self.transform(audio, sr)
 
+            fp = Fingerprint()
 
 
 
