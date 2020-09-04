@@ -17,10 +17,9 @@ class Fingerprint:
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
-    def __init__(self, audio_path, n_fft=512):
-        y, sr = librosa.load(audio_path, sr=None)
-        self.sr = None
+    def __init__(self, y, sr, n_fft=512):
         self.signal = y
+        self.sr = sr
         self.n_fft = n_fft
         self.fingerprint = self.get_prints(self.signal, sr, n_fft)
 
