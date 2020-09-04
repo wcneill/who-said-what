@@ -7,8 +7,8 @@ import pytest
 @pytest.fixture
 def fp():
     filename = librosa.example('nutcracker')
-    aud, sr = librosa.load(filename)
-    return Fingerprint(aud, sr)
+    a, s = librosa.load(filename)
+    return Fingerprint(a, s)
 
 
 def test_constructor(fp):

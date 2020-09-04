@@ -13,7 +13,8 @@ class Fingerprint:
     a filtered spectrogram which is a sparse matrix describing the most dominant frequencies
     of the original signal.
 
-    :param audio_path: The path from which to load audio data for fingerprinting
+    :param y: Numpy array containing the audio data to fingerprint
+    :param sr: The sample rate of the signal y.
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
@@ -119,5 +120,6 @@ class Fingerprint:
 
 if __name__ == '__main__':
     path = librosa.ex('trumpet')
-    fp = Fingerprint(path)
+    aud, sr = librosa.load(path)
+    fp = Fingerprint(aud, sr)
     fp.show()
