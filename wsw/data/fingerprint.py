@@ -120,6 +120,6 @@ class Fingerprint:
 
 if __name__ == '__main__':
     path = librosa.ex('trumpet')
-    aud, sr = librosa.load(path)
-    fp = Fingerprint(aud, sr)
+    a, s = librosa.load(path)
+    fp = Fingerprint(a, s)
     fp.show()
