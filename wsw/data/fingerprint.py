@@ -7,39 +7,51 @@ import matplotlib.pyplot as plt
 
 class Fingerprint:
     """
-    This is a simple class that contains class variables describing audio data. These
-    class variables can be thought of as 'fingerprints' of the original audio signal.
-    Currently, the fingerprint class stores two forms of the data: Original signal and
-    a filtered spectrogram which is a sparse matrix describing the most dominant frequencies
-    of the original signal.
+    This is a simple class that contains class variables describing  different views
+    of the same audio data.
+
+    The fingerprint object stores four total views of audio data: The original signal,
+    a STFT spectrogram, a reduced spectrogram containing only the most powerful
+    frequencies, and a mel cepstrum.
 
     :param y: Numpy array containing the audio data to fingerprint
     :param sr: The sample rate of the signal y.
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
+
     def __init__(self, y, sr, n_fft=512):
         self.signal = y
         self.sr = sr
         self.n_fft = n_fft
-        self.fingerprint = self.get_prints(self.signal, sr, n_fft)
+        self.fingerprint = self.get_prints(self.signal, self.sr, rsr, n_fft)
 
     def show(self):
         """
-        This method displays the fingerprint via matplotlib
+        This method displays the fingerprint data via matplotlib
         """
-        d = librosa.amplitude_to_db(self.fingerprint)
-        librosa.display.specshow(d, y_axis='linear', x_axis='time', sr=self.sr)
+
+        fig, axes = plt.subplots(1, 3, figsize=(10, 3))
+        specs = (librosa.amplitude_to_db(self.fingerprint[i]) for i in range(3))
+        scales = ('hz', 'mel', 'hz')
+
+        for i, (sp, sc) in enumerate(zip(specs, scales)):
+            librosa.display.specshow(sp, x_axis='time', y_axis=sc, sr=self.sr, ax=axes[i])
+
+        plt.tight_layout()
         plt.show()
 
-    def get_prints(self, signal, sr, n_fft):
-        signal = Fingerprint._lpfilter(signal, sr)
-        signal = librosa.resample(signal, sr, 11025)
+    def get_prints(self, signal, sr, rsr, n_fft):
+
+        if rsr:
+            signal = Fingerprint._lpfilter(signal, sr, rsr)
+            signal, self.sr = librosa.resample(signal, sr, rsr), rsr
+
         spec = Fingerprint.stft(signal, n_fft)
-        spec = librosa.decompose.nn_filter(spec)
-        spec = Fingerprint.spec_filter(spec, 6)
-        self.sr = 11025
-        return spec
+        sparse_spec = Fingerprint.spec_filter(spec, 6)
+        mel_spec = librosa.feature.melspectrogram(S=spec, sr=self.sr)
+
+        return spec, mel_spec, sparse_spec
 
     @staticmethod
     def stft(signal, N):
@@ -49,6 +61,7 @@ class Fingerprint:
         :param signal: The audio signal to perform STFT on.
         :param N: The number of ffts
         """
+
         spec = librosa.stft(signal, n_fft=N, window=sig.windows.hamming)
         return np.abs(spec)
 
@@ -93,14 +106,18 @@ class Fingerprint:
         return filtered.T
 
     @staticmethod
-    def _lpfilter(signal, sr):
+    def _lpfilter(signal, sr, rsr):
         """
-        Helper method. Applies Low-pass filter that attenuates at 10kHz
+        Helper method. Attenuates signal frequencies in preparation for down sampling
+        in order to prevent aliasing during the downsampling process. For this reason,
+        the filter attenuates frequencies that are above the desired resampling rate
+        divided by 2.
 
         :param signal: The signal to filter
-        :param sr: The sample rate of the signal
+        :param sr: The sample rate of the original signal
+        :param rsr: The rate to which the original signal will be downsampled.
         """
-        cutoff = 10e3
+        cutoff = rsr / 2
         sos = sig.butter(10, cutoff, fs=sr, btype='lowpass', analog=False, output='sos')
         return sig.sosfilt(sos, signal)
 
