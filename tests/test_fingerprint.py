@@ -17,7 +17,6 @@ def test_constructor(fp):
     assert fp.sr is not None, "No sample rate registered in constructor"
 
 
-# noinspection PyProtectedMember
 def test_log_bin():
     """
     Method tests that the correct number of bins is created
