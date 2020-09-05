@@ -130,3 +130,6 @@ dmypy.json
 
 # Jupyter Notebook "scrap paper"
 scrap_paper/
+
+# test stuff
+tests/test.csv
