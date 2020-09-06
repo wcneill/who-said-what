@@ -68,7 +68,7 @@ def train(model, epochs, lr, trainloader, validloader=None, plot=True):
             t_loss.backward()
             opt.step()
 
-        model.train_loss.append(running_tl / len(trainloader))
+        train_loss.append(running_tl / len(trainloader))
         if e % 10 == 0:
             print(f'Epoch {e} Training Loss: {train_loss[-1]}')
 
@@ -85,8 +85,8 @@ def train(model, epochs, lr, trainloader, validloader=None, plot=True):
                     v_loss = criterion(scores, labels)
                     running_vl += v_loss.item()
                     running_ac += (preds == labels).cpu().numpy().mean()
-            model.valid_loss.append(running_vl / len(validloader))
-            model.accuracy.apend(running_ac / len(validloader))
+            valid_loss.append(running_vl / len(validloader))
+            accuracy.append(running_ac / len(validloader))
             model.train()
 
             if e % 10 == 0:
