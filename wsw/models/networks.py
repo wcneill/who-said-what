@@ -93,16 +93,23 @@ def train(model, epochs, lr, trainloader, validloader=None, plot=True):
                 print(f'Epoch {e} Validation Loss: {valid_loss[-1]}')
 
     if plot:
-        fig, axes = plt.subplots(1, 2)
-        axes[0].title('Loss Plot')
-        axes[1].title('Accuracy')
-        axes[0].plot(train_loss, label='training')
-        axes[0].plot(valid_loss, label='validation')
-        axes[1].plot(accuracy)
-        axes[0].xlabel('Epochs')
-        axes[1].xlabel('Epochs')
-        plt.legend()
-        plt.show()
+        if validloader is not None:
+            fig, axes = plt.subplots(1, 2)
+            axes[0].set_title('Loss Plot')
+            axes[1].set_title('Accuracy')
+            axes[0].plot(train_loss, label='training')
+            axes[0].plot(valid_loss, label='validation')
+            axes[1].plot(accuracy)
+            axes[0].xlabel('Epochs')
+            axes[1].xlabel('Epochs')
+            plt.legend()
+            plt.show()
+        else:
+            plt.plot(train_loss, label='training')
+            plt.title('Loss Plot')
+            plt.xlabel('Epochs')
+            plt.legend()
+            plt.show()
 
 
 if __name__ == '__main__':
