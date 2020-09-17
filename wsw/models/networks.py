@@ -20,9 +20,9 @@ class AVNN(nn.Module):
         self.conv2 = nn.Conv2d(64, 128, 7)
         self.conv3 = nn.Conv2d(128, 256, 5)
         self.conv4 = nn.Conv2d(256, 512, 3)
-        self.fc1 = nn.Linear(512 * 25 * 51, 1028)
+        self.fc1 = nn.Linear(512 * 18 * 18, 1028)
         self.fc2 = nn.Linear(1028, 512)
-        self.out = nn.Linear(512, 3)
+        self.out = nn.Linear(512, 4)
         self.pool = nn.MaxPool2d(2, 2)
         self.drop = nn.Dropout(p=0.2)
 
@@ -34,13 +34,13 @@ class AVNN(nn.Module):
         x = func.relu(self.conv3(x))
         x = self.drop(self.pool(x))
         x = func.relu(self.conv4(x))
-        x = x.view(-1, 512 * 25 * 51)
+        x = x.view(-1, 512 * 18 * 18)
         x = func.relu(self.fc1(x))
         x = func.relu(self.fc2(x))
         return self.out(x)
 
 
-def train_(model, epochs, lr, trainloader, validloader=None, plot=True):
+def train(model, epochs, lr, trainloader, validloader=None, plot=True):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
@@ -96,8 +96,6 @@ def train_(model, epochs, lr, trainloader, validloader=None, plot=True):
             axes[1].xlabel('Epochs')
             plt.legend()
             plt.show()
-
-
 
 
 if __name__ == '__main__':
