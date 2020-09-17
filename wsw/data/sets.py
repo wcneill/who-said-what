@@ -52,11 +52,11 @@ class AudioImageSet(Dataset):
         audio_loc = os.path.join(self.root_dir, self.data_frame.iloc[idx, 2])
         audio, sr = li.load(audio_loc)
 
-        if self.transform:
-            audio, sr = self.transform(audio, sr)
-
         fp = Fingerprint(audio, sr)
         image = torch.tensor([transform.resize(d, self.size) for d in fp.fingerprint])
         speakers = self.data_frame.iloc[idx, -1]
 
-        return {'image': image, 'speakers': speakers}
+        if self.transform:
+            image = self.transform(image)
+
+        return image, speakers

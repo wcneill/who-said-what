@@ -22,7 +22,7 @@ class AVNN(nn.Module):
         self.conv4 = nn.Conv2d(256, 512, 3)
         self.fc1 = nn.Linear(512 * 18 * 18, 1028)
         self.fc2 = nn.Linear(1028, 512)
-        self.out = nn.Linear(512, 4)
+        self.out = nn.Linear(512, 4)  # classes: 0, 1, 2, or 3+ speakers
         self.pool = nn.MaxPool2d(2, 2)
         self.drop = nn.Dropout(p=0.2)
 
@@ -58,7 +58,8 @@ def train(model, epochs, lr, trainloader, validloader=None, plot=True):
         running_ac = 0
 
         for images, labels in trainloader:
-            images, labels = images.to(device), labels.to(device)
+            images = images.to(device)
+            labels = labels.to(device)
             opt.zero_grad()
             scores = model(images)
             t_loss = criterion(scores, labels)
@@ -67,13 +68,16 @@ def train(model, epochs, lr, trainloader, validloader=None, plot=True):
             t_loss.backward()
             opt.step()
 
-        model.train_loss.append(running_tl / len(trainloader))
+        train_loss.append(running_tl / len(trainloader))
+        if e % 10 == 0:
+            print(f'Epoch {e} Training Loss: {train_loss[-1]}')
 
         if validloader is not None:
             model.eval()
             with torch.no_grad():
                 for images, labels in validloader:
-                    images, labels = images.to(device), labels.to(device)
+                    images = images.to(device)
+                    labels = labels.to(device)
                     scores = model(images)
                     ps = func.log_softmax(scores, dim=1)
                     preds = torch.argmax(ps, dim=1)
@@ -81,14 +85,18 @@ def train(model, epochs, lr, trainloader, validloader=None, plot=True):
                     v_loss = criterion(scores, labels)
                     running_vl += v_loss.item()
                     running_ac += (preds == labels).cpu().numpy().mean()
-            model.valid_loss.append(running_vl / len(validloader))
-            model.accuracy.apend(running_ac / len(validloader))
+            valid_loss.append(running_vl / len(validloader))
+            accuracy.append(running_ac / len(validloader))
             model.train()
 
-        if plot:
+            if e % 10 == 0:
+                print(f'Epoch {e} Validation Loss: {valid_loss[-1]}')
+
+    if plot:
+        if validloader is not None:
             fig, axes = plt.subplots(1, 2)
-            axes[0].title('Loss Plot')
-            axes[1].title('Accuracy')
+            axes[0].set_title('Loss Plot')
+            axes[1].set_title('Accuracy')
             axes[0].plot(train_loss, label='training')
             axes[0].plot(valid_loss, label='validation')
             axes[1].plot(accuracy)
@@ -96,11 +104,18 @@ def train(model, epochs, lr, trainloader, validloader=None, plot=True):
             axes[1].xlabel('Epochs')
             plt.legend()
             plt.show()
+        else:
+            plt.plot(train_loss, label='training')
+            plt.title('Loss Plot')
+            plt.xlabel('Epochs')
+            plt.legend()
+            plt.show()
 
 
 if __name__ == '__main__':
+    # calculate last convlayer output shape (comment out FC layers first):
     network = AVNN()
-    im = torch.tensor(np.random.random((3, 257, 460)))
+    im = torch.tensor(np.random.random((3, 200, 200)))
     im = im.unsqueeze(0).float()
     out = network(im)
     print(im.shape)
