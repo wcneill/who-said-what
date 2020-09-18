@@ -1,5 +1,6 @@
-# OS and I/O
+# OS, I/O random others
 import os
+import ast
 # import sys
 
 # Math and ML libraries
@@ -26,7 +27,7 @@ class AudioImageSet(Dataset):
     the standard STFT/spectrogram.
     """
 
-    def __init__(self, csv_file, root_dir, imsize=(257, 460), tfm=None):
+    def __init__(self, csv_file, root_dir, imsize=(200, 200), tfm=None):
         """
         :param csv_file: (string) Path to the csv file with data annotations
         :param root_dir: (string) Directory containing raw audio data
@@ -56,8 +57,15 @@ class AudioImageSet(Dataset):
         if self.transform:
             audio, sr = self.transform(audio, sr)
 
-        fp = Fingerprint(audio, sr)
-        image = torch.tensor([transform.resize(d, self.size) for d in fp.fingerprint])
-        speakers = self.data_frame.iloc[idx, -1]
+        audio = pre.interval_pad(audio, 60, sr=sr)
+        seq = pre.sequence(audio, 60, sr=sr)
 
-        return {'image': image, 'speakers': speakers}
+        batch = []
+        for s in seq:
+            fp = Fingerprint(s, sr)
+            image = torch.tensor([transform.resize(d, self.size) for d in fp.fingerprint])
+            batch.append(image)
+
+        speakers = ast.literal_eval(self.data_frame.iloc[idx, -1])
+
+        return batch, speakers

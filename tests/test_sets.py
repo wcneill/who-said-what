@@ -28,5 +28,5 @@ def test_ais_get_item(rootdir):
     ais = AudioImageSet('test.csv', rootdir)
     assert len(ais) == 3, \
         'Test set does not contain 3 audio samples (it should)'
-    assert ais[0]['image'].shape == (3, ais.size[0], ais.size[1]), \
+    assert ais[0].shape == (3, ais.size[0], ais.size[1]), \
         "Sample image size does not meet AudioImageSet parameter `size`"
