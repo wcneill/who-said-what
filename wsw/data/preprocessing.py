@@ -153,6 +153,20 @@ def interval_pad(audio, interval, sr=22050):
         return np.concatenate((audio, np.zeros(diff)), axis=None)
 
 
+def sequence(audio, interval, sr=22050):
+    """
+    Create a sequence of equal sized audio samples from a single audio clip.
+    Will raise an error if the interval chosen does not split the audio evenly.
+    In this case, consider using `interval_pad` to prepare the audio for sequencing.
+
+    :param audio: The audio to split. Should be a Numpy array
+    :param interval: The time interval in seconds to divide the audio clip by
+    :param sr: Sample rate of audio. Default is 22050 to match Librosa defaults.
+    """
+    n_sections = int(len(audio) / (interval * sr))
+    return np.split(audio, n_sections)
+
+
 def clip_audio(audio, length, sr=22050, save_to=None, log=None):
     """
     clip or extend a signal by either cutting it short or padding it with zeros.
