@@ -121,6 +121,38 @@ def resample_all(old_loc, new_loc, sr, restart=False, manifest=None):
             p.starmap(resample, zip(fpaths, new_paths, [sr] * n, ['WAV'] * n, [manifest] * n))
 
 
+def interval_pad(audio, interval, sr=22050):
+    """
+    Extend an audio to a length such that len(audio) mod some time interval is
+    equal to zero. This method is intended to be useful in the case where
+    one wishes to create a sequence of equal length chunks of an audio
+    signal.
+
+    :param audio: The audio to pad. Audio will be converted to numpy
+        array.
+    :param interval: The time interval in seconds. The returned audio
+        will be such that len(audio) / interval = 0.
+    :param sr: The sampling rate of the audio file. Default is 22050 to
+        match the Librosa library defaults.
+    :return: NumPy array of padded audio data. Returns audio un-modified
+        if the length of the audio is equal to the interval input.
+    """
+
+    audio = np.array(audio)
+    a_samples = len(audio)
+    i_samples = sr * interval
+
+    if (a_samples % i_samples) == 0:
+        return audio
+    if a_samples < i_samples:
+        diff = i_samples - a_samples
+        return np.concatenate((audio, np.zeros(diff)), axis=None)
+    if a_samples > i_samples:
+        rem = a_samples % i_samples
+        diff = i_samples - rem
+        return np.concatenate((audio, np.zeros(diff)), axis=None)
+
+
 def clip_audio(audio, length, sr=22050, save_to=None, log=None):
     """
     clip or extend a signal by either cutting it short or padding it with zeros.
