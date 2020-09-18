@@ -92,6 +92,24 @@ def test_interval_pad():
             f'signal not padded to appropriate length: {len(signal)}'
 
 
+def test_sequence():
+    """
+    Test to ensure audio is equally divided into sequence of equal length
+    time intervals
+    """
+
+    sr = 10
+    interval = 5
+    times = [3.33, 5., 7.1]
+
+    for t in times:
+        signal = np.sin(np.arange(sr * t))
+        signal = interval_pad(signal, interval, sr=sr)
+        seq = sequence(signal, interval, sr=sr)
+        assert len(seq) == (len(signal) / sr / interval), \
+            "Failed to divide audio into sequence of equal length parts."
+
+
 def test_clip_audio():
     """
     Test to ensure audio file is clipped to correct length and written to disk successfully.

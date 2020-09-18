@@ -16,6 +16,7 @@ import pandas as pd
 
 # Internal modules
 from wsw.data.fingerprint import Fingerprint
+from wsw.data import preprocessing as pre
 
 
 class AudioImageSet(Dataset):
