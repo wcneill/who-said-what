@@ -55,4 +55,4 @@ tifffile==2020.9.3
 toml==0.10.1
 torch==1.6.0
 torchvision==0.7.0
-urllib3==1.25.10
+urllib3==1.26.5
