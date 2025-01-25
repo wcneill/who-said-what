@@ -46,7 +46,7 @@ class Fingerprint:
 
         if rsr:
             signal = Fingerprint._lpfilter(signal, sr, rsr)
-            signal, self.sample_rate = librosa.resample(signal, sr, rsr), rsr
+            signal, self.sample_rate = librosa.resample(y=signal, orig_sr=sr, target_sr=rsr), rsr
 
         spec = Fingerprint.stft(signal, n_fft)
         sparse_spec = Fingerprint.spec_filter(spec, 6)
