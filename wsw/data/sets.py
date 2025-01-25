@@ -26,7 +26,7 @@ class AudioImageSet(Dataset):
     the standard STFT/spectrogram.
     """
 
-    def __init__(self, csv_file, root_dir, imsize=(257, 460), tfm=None):
+    def __init__(self, csv_file, root_dir, imsize=(257, 460), transform=None):
         """
         :param csv_file: (string) Path to the csv file with data annotations
         :param root_dir: (string) Directory containing raw audio data
@@ -34,14 +34,14 @@ class AudioImageSet(Dataset):
             different type of spectrogram, we cannot expect each spec to be the same size.
             In order to combine all three spectrograms into a 3-channel image, they need to
             be of uniform size. That size is dictated by this argument.
-        :param tfm: (callable, optional): Optional transform(s) to be applied to
+        :param transform: (callable, optional): Optional transform(s) to be applied to
             audio before it is fingerprinted
         """
 
         self.data_frame = pd.read_csv(csv_file)
         self.root_dir = root_dir
         self.size = imsize
-        self.transform = tfm
+        self.transform = transform
 
     def __len__(self):
         return len(self.data_frame)

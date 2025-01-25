@@ -180,14 +180,13 @@ def clip_audio(audio, length, sr=22050, save_to=None, log=None):
         been saved to file
     """
 
-    m_samples = len(audio)
-    n_keep = int(length * sr)
+    target_length = int(length * sr)
 
-    if m_samples > n_keep:
-        audio = audio[:n_keep]
-    if m_samples < n_keep:
-        to_add = n_keep - m_samples
-        audio = np.concatenate((audio, np.zeros(to_add)))
+    if len(audio) < target_length:
+        padding_length = target_length - len(audio)
+        audio = np.concatenate((audio, np.zeros(padding_length)))
+    else:
+        audio = audio[:target_length]
 
     if save_to is not None:
         if not os.path.exists(os.path.dirname(save_to)):

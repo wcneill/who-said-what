@@ -14,7 +14,7 @@ def fp():
 def test_constructor(fp):
     """Test that instance variables are filled"""
     assert fp.signal is not None, "No signal received/initialized in constructor"
-    assert fp.sr is not None, "No sample rate registered in constructor"
+    assert fp.sample_rate is not None, "No sample rate registered in constructor"
 
 
 def test_log_bin():

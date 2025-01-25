@@ -14,17 +14,18 @@ class Fingerprint:
     a STFT spectrogram, a reduced spectrogram containing only the most powerful
     frequencies, and a mel cepstrum.
 
-    :param y: Numpy array containing the audio data to fingerprint
-    :param sr: The sample rate of the signal y.
+    :param signal: Numpy array containing the audio data to fingerprint
+    :param sample_rate: The sample rate of the signal y.
+    :param resample_rate: The rate to which the input signal will be down sampled.
     :param n_fft: The number of DFTs to use in creating the STFT/spectrogram
         fingerprint of the original audio data.
     """
 
-    def __init__(self, y, sr, rsr=11025, n_fft=512):
-        self.signal = y
-        self.sr = sr
+    def __init__(self, signal, sample_rate, resample_rate=11025, n_fft=512):
+        self.signal = signal
+        self.sample_rate = sample_rate
         self.n_fft = n_fft
-        self.fingerprint = self.get_prints(self.signal, self.sr, rsr, n_fft)
+        self.fingerprint = self.get_prints(self.signal, self.sample_rate, resample_rate, n_fft)
 
     def show(self):
         """
@@ -36,7 +37,7 @@ class Fingerprint:
         scales = ('hz', 'mel', 'hz')
 
         for i, (sp, sc) in enumerate(zip(specs, scales)):
-            librosa.display.specshow(sp, x_axis='time', y_axis=sc, sr=self.sr, ax=axes[i])
+            librosa.display.specshow(sp, x_axis='time', y_axis=sc, sr=self.sample_rate, ax=axes[i])
 
         plt.tight_layout()
         plt.show()
@@ -45,11 +46,11 @@ class Fingerprint:
 
         if rsr:
             signal = Fingerprint._lpfilter(signal, sr, rsr)
-            signal, self.sr = librosa.resample(signal, sr, rsr), rsr
+            signal, self.sample_rate = librosa.resample(signal, sr, rsr), rsr
 
         spec = Fingerprint.stft(signal, n_fft)
         sparse_spec = Fingerprint.spec_filter(spec, 6)
-        mel_spec = librosa.feature.melspectrogram(S=spec, sr=self.sr)
+        mel_spec = librosa.feature.melspectrogram(S=spec, sr=self.sample_rate)
 
         return spec, mel_spec, sparse_spec
 
@@ -69,7 +70,7 @@ class Fingerprint:
     def ft_filter(ft, n_bins, alpha=1):
         """
         Filters out weaker frequencies from a fourier transform. Could be thought of as analogous to
-        using Scipy.signal.find_peaks, then converting all non peak data to zeros.
+        using Scipy.signal.find_peaks, then converting all non-peak data to zeros.
 
         Peak data is determined by first dividing the frequency bins into logarithmic bands. Then, the
         strongest frequency from each band is identified. Finally, these strongest frequencies are
@@ -106,19 +107,19 @@ class Fingerprint:
         return filtered.T
 
     @staticmethod
-    def _lpfilter(signal, sr, rsr):
+    def _lpfilter(signal, sample_rate, resample_rate):
         """
         Helper method. Attenuates signal frequencies in preparation for down sampling
-        in order to prevent aliasing during the downsampling process. For this reason,
+        in order to prevent aliasing during the down sampling process. For this reason,
         the filter attenuates frequencies that are above the desired resampling rate
         divided by 2.
 
         :param signal: The signal to filter
-        :param sr: The sample rate of the original signal
-        :param rsr: The rate to which the original signal will be downsampled.
+        :param sample_rate: The sample rate of the original signal
+        :param resample_rate: The rate to which the original signal will be down sampled.
         """
-        cutoff = rsr / 2
-        sos = sig.butter(10, cutoff, fs=sr, btype='lowpass', analog=False, output='sos')
+        cutoff = resample_rate / 2
+        sos = sig.butter(10, cutoff, fs=sample_rate, btype='lowpass', analog=False, output='sos')
         return sig.sosfilt(sos, signal)
 
     @staticmethod
