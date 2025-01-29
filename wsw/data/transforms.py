@@ -6,6 +6,8 @@ from fingerprint import Fingerprint
 import scipy.signal as sig
 import pathlib
 from typing import AnyStr
+
+from torchvision import transforms
 from torch.utils.data import DataLoader
 
 
@@ -90,6 +92,17 @@ class ToFileTransform:
 
 
 if __name__ == "__main__":
+
+    rate = 22050
+
+    transform = transforms.Compose(
+        [
+            ClipAudio(3, rate),
+            MelSpecFromAudio(sample_rate=rate, n_fft=2048),
+            ToFileTransform()
+        ]
+    )
+
     file_location = "C:\\Users\\wesle\\OneDrive\\Documents\\Sound Recordings\\wes_001.m4a"
     audio, sr = librosa.load(file_location, sr=22050)
     print(sr)
