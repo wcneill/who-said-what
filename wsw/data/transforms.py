@@ -15,8 +15,7 @@ class ClipAudio:
 
     def __init__(self, target_length, sample_rate):
 
-        self.target = target_length
-        self.sr = sample_rate
+        self.target = target_length * sample_rate
 
     def __call__(self, audio: np.ndarray):
 
@@ -72,10 +71,13 @@ class BinFilterSpec:
         return Fingerprint.spec_filter(spectrogram, self.n_bins)
 
 
-class AsTensor:
+class ToTensorImg:
 
-    def __call__(self, input: np.ndarray):
-        return torch.from_numpy(input)
+    def __call__(self, img: np.ndarray):
+
+        img = np.atleast_3d(img)
+        img = img.transpose((2, 0, 1))
+        return torch.from_numpy(img)
 
 
 class ToFileTransform:
@@ -93,16 +95,23 @@ class ToFileTransform:
 
 if __name__ == "__main__":
 
-    rate = 22050
+    import matplotlib.pyplot as plt
 
+    PROJ_DIR = "C:\\Users\\wesle\\source\\repos\\who-said-what"
+
+    rate = 22050
     transform = transforms.Compose(
         [
             ClipAudio(3, rate),
             MelSpecFromAudio(sample_rate=rate, n_fft=2048),
-            ToFileTransform()
+            ToTensorImg()
         ]
     )
 
-    file_location = "C:\\Users\\wesle\\OneDrive\\Documents\\Sound Recordings\\wes_001.m4a"
+    file_location = "C:\\Users\\wesle\\OneDrive\\Documents\\Sound Recordings\\elaine_008.m4a"
     audio, sr = librosa.load(file_location, sr=22050)
-    print(sr)
+
+    spectrogram = transform(audio).squeeze().numpy()
+    librosa.display.specshow(spectrogram, x_axis="time", y_axis="mel", sr=sr)
+    plt.show()
+    print(spectrogram.size)
