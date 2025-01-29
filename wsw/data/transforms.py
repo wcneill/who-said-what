@@ -1,7 +1,12 @@
 import numpy as np
-from librosa import feature
+import librosa
+import torch
 
+from fingerprint import Fingerprint
 import scipy.signal as sig
+import pathlib
+from typing import AnyStr
+from torch.utils.data import DataLoader
 
 
 class ClipAudio:
@@ -20,23 +25,24 @@ class ClipAudio:
 
         return audio
 
+
 class MelSpecFromAudio:
 
-    def __init__(self, n_fft=2048, sample_rate=22050):
+    def __init__(self, sample_rate, n_fft=2048):
         self.n_fft = n_fft
         self.sr = sample_rate
 
     def __call__(self, audio):
-        return feature.melspectrogram(y=audio, sr=self.sr)
+        return librosa.feature.melspectrogram(y=audio, sr=self.sr)
 
 
 class MelSpecFromSpectrogram:
 
-    def __init__(self, sample_rate=22050):
+    def __init__(self, sample_rate):
         self.sr = sample_rate
 
     def __call__(self, spectrogram):
-        return feature.melspectrogram(S=spectrogram, sr=self.sr)
+        return librosa.feature.melspectrogram(S=spectrogram, sr=self.sr)
 
 
 class LowPassFilter:
@@ -54,3 +60,36 @@ class LowPassFilter:
         return sig.sosfilt(sos, signal)
 
 
+class BinFilterSpec:
+
+    def __init__(self, n_bins, alpha=1):
+        self.n_bins = n_bins
+        self.alpha = alpha
+
+    def __call__(self, spectrogram):
+        return Fingerprint.spec_filter(spectrogram, self.n_bins)
+
+
+class AsTensor:
+
+    def __call__(self, input: np.ndarray):
+        return torch.from_numpy(input)
+
+
+class ToFileTransform:
+
+    def __init__(self, folder_name, file_name_no_ext: AnyStr):
+
+        self.path = pathlib.Path(folder_name) / file_name_no_ext.split(".", maxsplit=2)[0]
+
+    def __call__(self, input):
+        if isinstance(input, torch.Tensor):
+            torch.save(input, self.path / ".pt")
+        elif isinstance(input, np.ndarray):
+            np.save(str(self.path / ".np"), input)
+
+
+if __name__ == "__main__":
+    file_location = "C:\\Users\\wesle\\OneDrive\\Documents\\Sound Recordings\\wes_001.m4a"
+    audio, sr = librosa.load(file_location, sr=22050)
+    print(sr)
