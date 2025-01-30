@@ -27,6 +27,17 @@ class ClipAudio:
         return audio
 
 
+class Spectrogram:
+    def __init__(self, n_fft=2048, hop_length=None, win_length=None):
+        self.hop_length = hop_length
+        self.win_length = win_length
+        self.n_fft = n_fft
+
+    def __call__(self, audio_in):
+        linear_spectrogram = librosa.stft(audio_in, n_fft=self.n_fft, hop_length=self.hop_length,  win_length=self.win_length)
+        return librosa.amplitude_to_db(np.abs(linear_spectrogram), ref=np.max)
+
+
 class MelSpecFromAudio:
 
     def __init__(self, sample_rate, n_fft=2048):
@@ -61,7 +72,7 @@ class LowPassFilter:
         return sig.sosfilt(sos, signal)
 
 
-class BinFilterSpec:
+class FingerprintSpec:
 
     def __init__(self, n_bins, alpha=1):
         self.n_bins = n_bins
