@@ -1,4 +1,4 @@
-from wsw.data.sets import *
+from wsw.data.data_sets import *
 import pytest
 
 import pandas as pd

@@ -2,7 +2,8 @@ import numpy as np
 import librosa
 import torch
 
-from fingerprint import Fingerprint
+
+from wsw.data.fingerprint import Fingerprint
 import scipy.signal as sig
 import pathlib
 from typing import AnyStr

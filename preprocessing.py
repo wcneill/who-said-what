@@ -5,8 +5,12 @@ import librosa
 import pandas as pd
 import torch
 
+from definitions import ROOT_DIR
 
-PROJ_DIR = pathlib.Path("C:\\Users\\wesle\\source\\repos\\who-said-what")
+import matplotlib.pyplot as plt
+
+
+PROJ_DIR = pathlib.Path("/")
 SPEC_TYPE = "melspec"
 RATE = 22050
 
@@ -29,7 +33,7 @@ tfm = Compose(
     ]
 )
 
-data_folder = PROJ_DIR / "training_data"
+data_folder = ROOT_DIR / "training_data"
 files = list(data_folder.glob('*.m4a'))
 csv = pd.DataFrame(index=range(len(files)), columns=["location", "label"])
 
@@ -39,14 +43,17 @@ for i, file in enumerate(files):
     audio, _ = librosa.load(file, sr=RATE)
     spectrogram = tfm(audio)
 
+    # plt.imshow(spectrogram.numpy().transpose((1, 2, 0)))  # C, H, W -> H, W, C
+    # plt.show()
+
     # save spectrogram tensor
-    file_name = file.stem
-    save_path = data_folder / pathlib.Path(f"{SPEC_TYPE}_{file_name}.pt")
+    file_name = pathlib.Path(f"{SPEC_TYPE}_{file.stem}.pt")
+    save_path = data_folder / file_name
     torch.save(spectrogram, save_path)
 
     # update annotations
-    person = file_name.split("_")[0]
-    csv.loc[i] = [save_path, label_map[person]]
+    person = str(file.stem).split("_")[0]
+    csv.loc[i] = [file_name, label_map[person]]
 
 csv.to_csv(data_folder / "annotations.csv", header=False, index=False)
 
